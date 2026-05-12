@@ -5,7 +5,7 @@ from collections import deque
 
 SAMPLE_RATE       = 48000
 CHUNK_MS          = 10
-MULTIPLIER        = 5
+MULTIPLIER        = 10
 DEBOUNCE_MS       = 50
 MAX_CYCLE_MS      = 3000
 MIN_CYCLE_MS      = 3
@@ -32,6 +32,7 @@ class CycleTracker:
         self.cycles        = []
         self.stroke_in     = DEFAULT_STROKE
         self.multiplier    = MULTIPLIER
+        self.debounce_ms   = DEBOUNCE_MS
 
     def process(self, samples):
         rms = float(np.sqrt(np.mean(np.array(samples, dtype=np.float32) ** 2)))
@@ -58,7 +59,7 @@ class CycleTracker:
             return 'listen', None
 
         now = time.time()
-        if self.last_spike_t and (now - self.last_spike_t) * 1000 < DEBOUNCE_MS:
+        if self.last_spike_t and (now - self.last_spike_t) * 1000 < self.debounce_ms:
             return 'debounce', None
         self.last_spike_t = now
 
@@ -98,10 +99,11 @@ def process_chunk(samples):
     return status, None, None, None, None
 
 
-def reset_tracker(stroke_in=1.0, multiplier=5):
+def reset_tracker(stroke_in=1.0, multiplier=10, debounce_ms=50):
     tracker.reset()
-    tracker.stroke_in  = stroke_in
-    tracker.multiplier = multiplier
+    tracker.stroke_in   = stroke_in
+    tracker.multiplier  = multiplier
+    tracker.debounce_ms = debounce_ms
 
 
 def get_cycles():

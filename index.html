@@ -5,193 +5,89 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cylinder Monitor</title>
   <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="icon.png" type="image/png" />
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
-      background: #0a0a0a;
-      color: #e0e0e0;
+      background: #0a0a0a; color: #e0e0e0;
       font-family: 'Segoe UI', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 24px 16px;
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; padding: 24px 16px;
     }
-
-    h1 {
-      color: #4fc3f7;
-      font-size: 1.4rem;
-      margin-bottom: 8px;
-      letter-spacing: 0.05em;
-    }
-
-    #status-bar {
-      font-size: 0.85rem;
-      color: #888;
-      margin-bottom: 20px;
-      min-height: 1.2em;
-    }
-
-    #status-bar.ready { color: #66bb6a; }
-    #status-bar.error { color: #ef5350; }
-    #status-bar.cal   { color: #ffa726; }
-
+    h1 { color: #4fc3f7; font-size: 1.4rem; margin-bottom: 8px; letter-spacing: 0.05em; }
+    #status-bar { font-size: 0.85rem; color: #888; margin-bottom: 20px; min-height: 1.2em; }
+    #status-bar.ready  { color: #66bb6a; }
+    #status-bar.error  { color: #ef5350; }
+    #status-bar.cal    { color: #ffa726; }
     .card {
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      border-radius: 10px;
-      padding: 20px;
-      width: 100%;
-      max-width: 480px;
-      margin-bottom: 16px;
+      background: #1a1a1a; border: 1px solid #2a2a2a;
+      border-radius: 10px; padding: 20px;
+      width: 100%; max-width: 480px; margin-bottom: 16px;
     }
-
     .card h2 {
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #555;
-      margin-bottom: 14px;
+      font-size: 0.8rem; text-transform: uppercase;
+      letter-spacing: 0.1em; color: #555; margin-bottom: 14px;
     }
-
-    #metric-speed {
-      font-size: 3.5rem;
-      font-weight: 700;
-      color: #4fc3f7;
-      text-align: center;
-      line-height: 1;
-    }
-
-    #metric-delta {
-      font-size: 1.1rem;
-      color: #888;
-      text-align: center;
-      margin-top: 6px;
-    }
-
-    #metric-label {
-      font-size: 0.75rem;
-      color: #555;
-      text-align: center;
-      margin-top: 4px;
-    }
-
-    .row {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    label {
-      font-size: 0.8rem;
-      color: #888;
-      min-width: 110px;
-    }
-
+    #metric-speed { font-size: 3.5rem; font-weight: 700; color: #4fc3f7; text-align: center; line-height: 1; }
+    #metric-delta { font-size: 1.1rem; color: #888; text-align: center; margin-top: 6px; }
+    #metric-label { font-size: 0.75rem; color: #555; text-align: center; margin-top: 4px; }
+    .row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+    label { font-size: 0.8rem; color: #888; min-width: 130px; }
     input[type="number"] {
-      background: #111;
-      border: 1px solid #333;
-      border-radius: 6px;
-      color: #e0e0e0;
-      padding: 6px 10px;
-      font-size: 0.9rem;
-      width: 90px;
+      background: #111; border: 1px solid #333; border-radius: 6px;
+      color: #e0e0e0; padding: 6px 10px; font-size: 0.9rem; width: 90px;
     }
-
     button {
-      background: #4fc3f7;
-      color: #000;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 22px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s;
+      background: #4fc3f7; color: #000; border: none; border-radius: 8px;
+      padding: 10px 22px; font-size: 0.95rem; font-weight: 600;
+      cursor: pointer; transition: background 0.15s;
     }
-
     button:hover  { background: #81d4fa; }
     button:active { background: #29b6f6; }
-
-    button.danger { background: #ef5350; color: #fff; }
+    button.danger       { background: #ef5350; color: #fff; }
     button.danger:hover { background: #e57373; }
-
-    #cycle-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.82rem;
-    }
-
+    #cycle-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
     #cycle-table th {
-      color: #555;
-      text-align: left;
-      padding: 4px 8px;
-      border-bottom: 1px solid #2a2a2a;
-      font-weight: 400;
-      text-transform: uppercase;
-      font-size: 0.72rem;
-      letter-spacing: 0.08em;
+      color: #555; text-align: left; padding: 4px 8px;
+      border-bottom: 1px solid #2a2a2a; font-weight: 400;
+      text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.08em;
     }
-
-    #cycle-table td {
-      padding: 6px 8px;
-      border-bottom: 1px solid #1e1e1e;
-      color: #ccc;
-    }
-
+    #cycle-table td { padding: 6px 8px; border-bottom: 1px solid #1e1e1e; color: #ccc; }
     #cycle-table tr:last-child td { border-bottom: none; }
-
-    #debug-bar {
-      font-size: 0.72rem;
-      color: #444;
-      text-align: center;
-      margin-top: 4px;
-      min-height: 1em;
-    }
-
-    #cal-progress {
-      height: 4px;
-      background: #222;
-      border-radius: 2px;
-      margin-bottom: 14px;
-      overflow: hidden;
-    }
-
-    #cal-fill {
-      height: 100%;
-      background: #ffa726;
-      width: 0%;
-      transition: width 0.1s;
-    }
-
-    .empty-log {
-      color: #444;
-      font-size: 0.8rem;
-      text-align: center;
-      padding: 12px 0;
-    }
+    #debug-bar { font-size: 0.72rem; color: #444; text-align: center; margin-top: 4px; min-height: 1em; }
+    #cal-progress { height: 4px; background: #222; border-radius: 2px; margin-bottom: 14px; overflow: hidden; }
+    #cal-fill { height: 100%; background: #ffa726; width: 0%; transition: width 0.1s; }
+    .empty-log { color: #444; font-size: 0.8rem; text-align: center; padding: 12px 0; }
   </style>
 </head>
 <body>
-
   <h1>Cylinder Monitor</h1>
   <div id="status-bar">Loading Pyodide…</div>
 
-  <div id="cal-progress" style="width:100%;max-width:480px;">
-    <div id="cal-fill"></div>
-  </div>
-
+  <!-- Last Measurement -->
   <div class="card">
     <h2>Last Measurement</h2>
+    <div id="cal-progress"><div id="cal-fill"></div></div>
     <div id="metric-speed">—</div>
     <div id="metric-delta">— ms</div>
     <div id="metric-label">in/sec &nbsp;|&nbsp; stroke time</div>
     <div id="debug-bar">baseline: — | threshold: — | hfEnergy: —</div>
   </div>
 
+  <!-- Cycle Log — directly under Last Measurement -->
+  <div class="card">
+    <h2>Cycle Log</h2>
+    <table id="cycle-table">
+      <thead>
+        <tr><th>#</th><th>Time</th><th>Delta (ms)</th><th>Speed (in/s)</th></tr>
+      </thead>
+      <tbody id="cycle-body">
+        <tr><td colspan="4" class="empty-log">No cycles yet</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Settings -->
   <div class="card">
     <h2>Settings</h2>
     <div class="row">
@@ -200,268 +96,217 @@
     </div>
     <div class="row">
       <label>Multiplier</label>
-      <input type="number" id="multiplier" value="5" step="1" min="1" />
+      <input type="number" id="multiplier" value="10" step="1" min="1" />
     </div>
     <div class="row">
       <label>HF Floor</label>
       <input type="number" id="hf-floor" value="0.01" step="0.001" min="0" />
     </div>
-    <div class="row" style="margin-top:6px; gap:12px;">
+    <div class="row">
+      <label>Debounce (ms)</label>
+      <input type="number" id="debounce-ms" value="50" step="5" min="0" />
+    </div>
+    <div class="row" style="margin-top:6px;">
       <button id="btn-start">Start</button>
       <button id="btn-reset" class="danger">Reset</button>
     </div>
   </div>
 
-  <div class="card">
-    <h2>Cycle Log</h2>
-    <table id="cycle-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Time</th>
-          <th>Delta (ms)</th>
-          <th>Speed (in/s)</th>
-        </tr>
-      </thead>
-      <tbody id="cycle-body">
-        <tr><td colspan="4" class="empty-log">No cycles yet</td></tr>
-      </tbody>
-    </table>
-  </div>
+  <script type="module">
+    (async () => {
+      const statusBar  = document.getElementById('status-bar');
+      const calFill    = document.getElementById('cal-fill');
+      const metricSpeed = document.getElementById('metric-speed');
+      const metricDelta = document.getElementById('metric-delta');
+      const debugBar   = document.getElementById('debug-bar');
+      const cycleBody  = document.getElementById('cycle-body');
 
-<script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
-<script>
-(async () => {
-  const statusBar  = document.getElementById('status-bar');
-  const calFill    = document.getElementById('cal-fill');
-  const metricSpeed = document.getElementById('metric-speed');
-  const metricDelta = document.getElementById('metric-delta');
-  const debugBar   = document.getElementById('debug-bar');
-  const cycleBody  = document.getElementById('cycle-body');
-
-  function setStatus(msg, cls = '') {
-    statusBar.textContent = msg;
-    statusBar.className = cls;
-  }
-
-  function updateDebug(baseline, threshold, hfEnergy) {
-    const bl  = baseline  != null ? baseline.toFixed(5)  : '—';
-    const thr = threshold != null ? threshold.toFixed(5) : '—';
-    const hf  = hfEnergy  != null ? hfEnergy.toFixed(5)  : '—';
-    debugBar.textContent = `baseline: ${bl} | threshold: ${thr} | hfEnergy: ${hf}`;
-  }
-
-  function addCycleToUI(n, delta_ms, speed, ts) {
-    const empty = cycleBody.querySelector('.empty-log');
-    if (empty) empty.parentElement.remove();
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${n}</td><td>${ts}</td><td>${parseFloat(delta_ms).toFixed(2)}</td><td>${parseFloat(speed).toFixed(3)}</td>`;
-    cycleBody.insertBefore(tr, cycleBody.firstChild);
-    metricSpeed.textContent = parseFloat(speed).toFixed(2);
-    metricDelta.textContent = parseFloat(delta_ms).toFixed(2) + ' ms';
-    metricSpeed.style.color = '#66bb6a';
-    setTimeout(() => { metricSpeed.style.color = '#4fc3f7'; }, 600);
-  }
-
-  // ── Pyodide init ────────────────────────────────────────────────────────────
-  setStatus('Loading Pyodide…', 'cal');
-  const pyodide = await loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.1/full/' });
-
-  setStatus('Loading numpy…', 'cal');
-  await pyodide.loadPackage('numpy');
-
-  setStatus('Loading detector…', 'cal');
-  const detectorCode = await fetch('detector.py').then(r => r.text());
-  await pyodide.runPythonAsync(detectorCode);
-
-  setStatus('Ready — press Start', 'ready');
-
-  // ── State ───────────────────────────────────────────────────────────────────
-  let audioCtx  = null;
-  let processor = null;
-  let running   = false;
-  let currentBaseline  = null;
-  let currentThreshold = null;
-  let calDone   = false;
-
-  // ── Audio pipeline ──────────────────────────────────────────────────────────
-  async function startAudio() {
-    audioCtx = new AudioContext({ sampleRate: 48000 });
-
-    // Resume AudioContext — required after user gesture
-    if (audioCtx.state === 'suspended') await audioCtx.resume();
-
-    await audioCtx.audioWorklet.addModule('processor.js');
-
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: false,
-        noiseSuppression: false,
-        autoGainControl:  false,
-        channelCount:     2
+      function setStatus(msg, cls = '') {
+        statusBar.textContent = msg;
+        statusBar.className = cls;
       }
-    });
 
-    const source = audioCtx.createMediaStreamSource(stream);
-
-    const multiplier = parseFloat(document.getElementById('multiplier').value) || 5;
-    const hfFloor    = parseFloat(document.getElementById('hf-floor').value);
-
-    processor = new AudioWorkletNode(audioCtx, 'cylinder-processor', {
-      processorOptions: {
-        chunkSamples: 480,
-        sampleRate:   48000,
-        hfBinLow:     10,
-        hfBinHigh:    100,
-        hfFloor:      hfFloor
+      function updateDebug(baseline, threshold, hfEnergy) {
+        const bl  = baseline  != null ? baseline.toFixed(5)  : '—';
+        const thr = threshold != null ? threshold.toFixed(5) : '—';
+        const hf  = hfEnergy  != null ? hfEnergy.toFixed(5)  : '—';
+        debugBar.textContent = `baseline: ${bl} | threshold: ${thr} | hfEnergy: ${hf}`;
       }
-    });
 
-    // ── Message handler ───────────────────────────────────────────────────────
-    processor.port.onmessage = async (e) => {
+      function addCycleToUI(n, delta_ms, speed, ts) {
+        const empty = cycleBody.querySelector('.empty-log');
+        if (empty) empty.parentElement.remove();
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${n}</td><td>${ts}</td><td>${parseFloat(delta_ms).toFixed(2)}</td><td>${parseFloat(speed).toFixed(3)}</td>`;
+        cycleBody.insertBefore(tr, cycleBody.firstChild);
+        metricSpeed.textContent = parseFloat(speed).toFixed(2);
+        metricDelta.textContent = parseFloat(delta_ms).toFixed(2) + ' ms';
+        metricSpeed.style.color = '#66bb6a';
+        setTimeout(() => { metricSpeed.style.color = '#4fc3f7'; }, 600);
+      }
 
-      // ── RMS: calibration phase ──────────────────────────────────────────────
-      if (e.data.type === 'rms') {
-        if (calDone) return; // stop feeding Pyodide rms after cal complete
+      // ── Pyodide init ──────────────────────────────────────────────────────
+      setStatus('Loading Pyodide…', 'cal');
+      const pyodide = await loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.1/full/' });
+      setStatus('Loading numpy…', 'cal');
+      await pyodide.loadPackage('numpy');
+      setStatus('Loading detector…', 'cal');
+      const detectorCode = await fetch('detector.py').then(r => r.text());
+      await pyodide.runPythonAsync(detectorCode);
+      setStatus('Ready — press Start', 'ready');
 
+      // ── State ─────────────────────────────────────────────────────────────
+      let audioCtx = null;
+      let processor = null;
+      let running   = false;
+      let calDone   = false;
+      let currentBaseline  = null;
+      let currentThreshold = null;
+
+      // ── Helpers to read settings ──────────────────────────────────────────
+      function getStrokeIn()   { return parseFloat(document.getElementById('stroke-in').value)   || 1.0; }
+      function getMultiplier() { return parseFloat(document.getElementById('multiplier').value)  || 10;  }
+      function getHfFloor()    { return parseFloat(document.getElementById('hf-floor').value);           }
+      function getDebounceMs() { return parseFloat(document.getElementById('debounce-ms').value) || 50;  }
+
+      // ── Audio pipeline ────────────────────────────────────────────────────
+      async function startAudio() {
+        audioCtx = new AudioContext({ sampleRate: 48000 });
+        if (audioCtx.state === 'suspended') await audioCtx.resume();
+        await audioCtx.audioWorklet.addModule('processor.js');
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false,
+            channelCount: 2
+          }
+        });
+
+        const source = audioCtx.createMediaStreamSource(stream);
+        processor = new AudioWorkletNode(audioCtx, 'cylinder-processor', {
+          processorOptions: {
+            chunkSamples: 480,
+            sampleRate:   48000,
+            hfBinLow:     10,
+            hfBinHigh:    100,
+            hfFloor:      getHfFloor()
+          }
+        });
+
+        processor.port.onmessage = async (e) => {
+          // ── RMS: calibration phase ────────────────────────────────────────
+          if (e.data.type === 'rms') {
+            if (calDone) return;
+            try {
+              const samples = new Array(480).fill(e.data.value);
+              const result  = await pyodide.runPythonAsync(`process_chunk([${samples.join(',')}])`);
+              const arr     = result.toJs ? result.toJs() : Array.from(result);
+              const status  = arr[0];
+              if (typeof status === 'string' && status.startsWith('cal:')) {
+                const pct = parseInt(status.split(':')[1]);
+                calFill.style.width = pct + '%';
+                setStatus(`Calibrating… ${pct}%`, 'cal');
+              } else if (status === 'ready') {
+                calDone = true;
+                calFill.style.width = '100%';
+                calFill.style.background = '#66bb6a';
+                setStatus('Listening…', 'ready');
+                currentBaseline  = await pyodide.runPythonAsync('get_baseline()');
+                currentThreshold = currentBaseline * getMultiplier();
+                processor.port.postMessage({ type: 'set_threshold', value: currentThreshold });
+                updateDebug(currentBaseline, currentThreshold, null);
+              }
+            } catch (err) { console.warn('rms handler error:', err); }
+          }
+
+          // ── Gated: FFT blocked a loud chunk ──────────────────────────────
+          if (e.data.type === 'gated') {
+            console.debug('GATED — rms:', e.data.rms.toFixed(5), 'hfEnergy:', e.data.hfEnergy.toFixed(5));
+            updateDebug(currentBaseline, currentThreshold, e.data.hfEnergy);
+          }
+
+          // ── Spike: passed RMS threshold and FFT gate ──────────────────────
+          if (e.data.type === 'spike') {
+            console.log('SPIKE — rms:', e.data.rms.toFixed(5), 'hfEnergy:', e.data.hfEnergy != null ? e.data.hfEnergy.toFixed(5) : 'n/a');
+            updateDebug(currentBaseline, currentThreshold, e.data.hfEnergy);
+            try {
+              const samples = new Array(480).fill(e.data.rms);
+              const result  = await pyodide.runPythonAsync(`process_chunk([${samples.join(',')}])`);
+              const arr     = result.toJs ? result.toJs() : Array.from(result);
+              const [status, n, delta_ms, speed, ts] = arr;
+              console.log('Pyodide status:', status, '| delta_ms:', delta_ms, '| speed:', speed);
+              if (status === 'cycle') {
+                addCycleToUI(n, delta_ms, speed, ts);
+              } else {
+                const labels = {
+                  breakaway: '⚡ Breakaway detected',
+                  debounce:  'Debounce…',
+                  noise:     'Noise (too short)',
+                  timeout:   'Timeout — reset',
+                  listen:    'Listening…',
+                };
+                setStatus(labels[status] || status, 'ready');
+              }
+              currentBaseline = await pyodide.runPythonAsync('get_baseline()');
+              if (currentBaseline) {
+                currentThreshold = currentBaseline * getMultiplier();
+                processor.port.postMessage({ type: 'set_threshold', value: currentThreshold });
+              }
+            } catch (err) { console.warn('spike handler error:', err); }
+          }
+        };
+
+        source.connect(processor);
+        processor.connect(audioCtx.destination);
+      }
+
+      // ── Buttons ───────────────────────────────────────────────────────────
+      document.getElementById('btn-start').addEventListener('click', async () => {
+        if (running) return;
+        running = true;
+        calDone = false;
+        document.getElementById('btn-start').disabled = true;
+        await pyodide.runPythonAsync(
+          `reset_tracker(stroke_in=${getStrokeIn()}, multiplier=${getMultiplier()}, debounce_ms=${getDebounceMs()})`
+        );
+        calFill.style.background = '#ffa726';
+        calFill.style.width = '0%';
+        setStatus('Starting mic…', 'cal');
         try {
-          const samples = new Array(480).fill(e.data.value);
-          const result  = await pyodide.runPythonAsync(
-            `process_chunk([${samples.join(',')}])`
-          );
-          const arr    = result.toJs ? result.toJs() : Array.from(result);
-          const status = arr[0];
-
-          if (typeof status === 'string' && status.startsWith('cal:')) {
-            const pct = parseInt(status.split(':')[1]);
-            calFill.style.width = pct + '%';
-            setStatus(`Calibrating… ${pct}%`, 'cal');
-
-          } else if (status === 'ready') {
-            calDone = true;
-            calFill.style.width = '100%';
-            calFill.style.background = '#66bb6a';
-            setStatus('Listening…', 'ready');
-
-            // ── KEY FIX: push threshold to worklet immediately on cal complete ──
-            currentBaseline  = await pyodide.runPythonAsync('get_baseline()');
-            const mult       = parseFloat(document.getElementById('multiplier').value) || 5;
-            currentThreshold = currentBaseline * mult;
-            processor.port.postMessage({ type: 'set_threshold', value: currentThreshold });
-            updateDebug(currentBaseline, currentThreshold, null);
-            console.log('Cal complete. Baseline:', currentBaseline, 'Threshold:', currentThreshold);
-          }
+          await startAudio();
         } catch (err) {
-          console.warn('rms handler error:', err);
+          setStatus('Mic error: ' + err.message, 'error');
+          running = false;
+          document.getElementById('btn-start').disabled = false;
         }
+      });
+
+      document.getElementById('btn-reset').addEventListener('click', async () => {
+        if (audioCtx) { await audioCtx.close(); audioCtx = null; processor = null; }
+        running = false;
+        calDone = false;
+        currentBaseline  = null;
+        currentThreshold = null;
+        document.getElementById('btn-start').disabled = false;
+        await pyodide.runPythonAsync(
+          `reset_tracker(stroke_in=${getStrokeIn()}, multiplier=${getMultiplier()}, debounce_ms=${getDebounceMs()})`
+        );
+        calFill.style.width = '0%';
+        calFill.style.background = '#ffa726';
+        metricSpeed.textContent = '—';
+        metricDelta.textContent = '— ms';
+        metricSpeed.style.color = '#4fc3f7';
+        cycleBody.innerHTML = '<tr><td colspan="4" class="empty-log">No cycles yet</td></tr>';
+        debugBar.textContent = 'baseline: — | threshold: — | hfEnergy: —';
+        setStatus('Ready — press Start', 'ready');
+      });
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('service_worker.js').catch(console.warn);
       }
-
-      // ── Gated: FFT blocked a loud chunk ────────────────────────────────────
-      if (e.data.type === 'gated') {
-        console.debug('GATED — rms:', e.data.rms.toFixed(5), 'hfEnergy:', e.data.hfEnergy.toFixed(5));
-        updateDebug(currentBaseline, currentThreshold, e.data.hfEnergy);
-      }
-
-      // ── Spike: passed RMS threshold and FFT gate ────────────────────────────
-      if (e.data.type === 'spike') {
-        console.log('SPIKE — rms:', e.data.rms.toFixed(5), 'hfEnergy:', e.data.hfEnergy != null ? e.data.hfEnergy.toFixed(5) : 'n/a');
-        updateDebug(currentBaseline, currentThreshold, e.data.hfEnergy);
-
-        try {
-          const samples = new Array(480).fill(e.data.rms);
-          const result  = await pyodide.runPythonAsync(
-            `process_chunk([${samples.join(',')}])`
-          );
-          const arr    = result.toJs ? result.toJs() : Array.from(result);
-          const [status, n, delta_ms, speed, ts] = arr;
-
-          console.log('Pyodide status:', status, '| delta_ms:', delta_ms, '| speed:', speed);
-
-          if (status === 'cycle') {
-            addCycleToUI(n, delta_ms, speed, ts);
-          } else {
-            const labels = {
-              breakaway: '⚡ Breakaway detected',
-              debounce:  'Debounce…',
-              noise:     'Noise (too short)',
-              timeout:   'Timeout — reset',
-              listen:    'Listening…',
-            };
-            setStatus(labels[status] || status, 'ready');
-          }
-
-          // Refresh adaptive baseline and push updated threshold to worklet
-          currentBaseline  = await pyodide.runPythonAsync('get_baseline()');
-          if (currentBaseline) {
-            const mult       = parseFloat(document.getElementById('multiplier').value) || 5;
-            currentThreshold = currentBaseline * mult;
-            processor.port.postMessage({ type: 'set_threshold', value: currentThreshold });
-          }
-
-        } catch (err) {
-          console.warn('spike handler error:', err);
-        }
-      }
-    };
-
-    source.connect(processor);
-    processor.connect(audioCtx.destination);
-  }
-
-  // ── Buttons ─────────────────────────────────────────────────────────────────
-  document.getElementById('btn-start').addEventListener('click', async () => {
-    if (running) return;
-    running = true;
-    calDone = false;
-    document.getElementById('btn-start').disabled = true;
-
-    const strokeIn   = parseFloat(document.getElementById('stroke-in').value)   || 1.0;
-    const multiplier = parseFloat(document.getElementById('multiplier').value)   || 5;
-    await pyodide.runPythonAsync(`reset_tracker(stroke_in=${strokeIn}, multiplier=${multiplier})`);
-
-    calFill.style.background = '#ffa726';
-    calFill.style.width = '0%';
-    setStatus('Starting mic…', 'cal');
-
-    try {
-      await startAudio();
-    } catch (err) {
-      setStatus('Mic error: ' + err.message, 'error');
-      console.error(err);
-      running = false;
-      document.getElementById('btn-start').disabled = false;
-    }
-  });
-
-  document.getElementById('btn-reset').addEventListener('click', async () => {
-    if (audioCtx) { await audioCtx.close(); audioCtx = null; processor = null; }
-    running  = false;
-    calDone  = false;
-    currentBaseline  = null;
-    currentThreshold = null;
-    document.getElementById('btn-start').disabled = false;
-
-    const strokeIn   = parseFloat(document.getElementById('stroke-in').value)   || 1.0;
-    const multiplier = parseFloat(document.getElementById('multiplier').value)   || 5;
-    await pyodide.runPythonAsync(`reset_tracker(stroke_in=${strokeIn}, multiplier=${multiplier})`);
-
-    calFill.style.width = '0%';
-    calFill.style.background = '#ffa726';
-    metricSpeed.textContent = '—';
-    metricDelta.textContent = '— ms';
-    metricSpeed.style.color = '#4fc3f7';
-    cycleBody.innerHTML = '<tr><td colspan="4" class="empty-log">No cycles yet</td></tr>';
-    debugBar.textContent = 'baseline: — | threshold: — | hfEnergy: —';
-    setStatus('Ready — press Start', 'ready');
-  });
-
-  // ── Service worker ───────────────────────────────────────────────────────────
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service_worker.js').catch(console.warn);
-  }
-
-})();
-</script>
-
+    })();
+  </script>
 </body>
 </html>
