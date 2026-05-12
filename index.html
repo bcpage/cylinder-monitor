@@ -418,15 +418,11 @@
       let running = false, calDone = false;
       let currentBaseline = null, currentThreshold = null;
 
-      async function startAudio() {
+      async function startAudio(stream) {
         const s = getSettings();
         audioCtx = new AudioContext({ sampleRate: 48000 });
         if (audioCtx.state === 'suspended') await audioCtx.resume();
         await audioCtx.audioWorklet.addModule('processor.js');
-
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 2 }
-        });
 
         const source = audioCtx.createMediaStreamSource(stream);
         processor = new AudioWorkletNode(audioCtx, 'cylinder-processor', {
@@ -688,10 +684,22 @@ for _rms, _t in _ring_js:
         if (running) return;
         running = true; calDone = false;
         document.getElementById('btn-start').disabled = true;
-        await applyReset();
         calFill.style.background = '#ffa726'; calFill.style.width = '0%';
         setStatus('Starting mic…', 'cal');
-        try { await startAudio(); }
+        // Request mic FIRST — before any await that yields the user-gesture token.
+        let stream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 2 }
+          });
+        } catch (err) {
+          setStatus('Mic error: ' + err.message, 'error');
+          running = false;
+          document.getElementById('btn-start').disabled = false;
+          return;
+        }
+        await applyReset();
+        try { await startAudio(stream); }
         catch (err) {
           setStatus('Mic error: ' + err.message, 'error');
           running = false;
