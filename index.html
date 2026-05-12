@@ -34,9 +34,9 @@
       min-height: 1.2em;
     }
 
-    #status-bar.ready  { color: #66bb6a; }
-    #status-bar.error  { color: #ef5350; }
-    #status-bar.cal    { color: #ffa726; }
+    #status-bar.ready { color: #66bb6a; }
+    #status-bar.error { color: #ef5350; }
+    #status-bar.cal   { color: #ffa726; }
 
     .card {
       background: #1a1a1a;
@@ -56,7 +56,6 @@
       margin-bottom: 14px;
     }
 
-    /* Big metric display */
     #metric-speed {
       font-size: 3.5rem;
       font-weight: 700;
@@ -79,7 +78,6 @@
       margin-top: 4px;
     }
 
-    /* Controls */
     .row {
       display: flex;
       gap: 10px;
@@ -118,13 +116,9 @@
     button:hover  { background: #81d4fa; }
     button:active { background: #29b6f6; }
 
-    button.danger {
-      background: #ef5350;
-      color: #fff;
-    }
+    button.danger { background: #ef5350; color: #fff; }
     button.danger:hover { background: #e57373; }
 
-    /* Cycle log table */
     #cycle-table {
       width: 100%;
       border-collapse: collapse;
@@ -150,7 +144,6 @@
 
     #cycle-table tr:last-child td { border-bottom: none; }
 
-    /* Debug bar */
     #debug-bar {
       font-size: 0.72rem;
       color: #444;
@@ -159,7 +152,6 @@
       min-height: 1em;
     }
 
-    /* Cal progress */
     #cal-progress {
       height: 4px;
       background: #222;
@@ -167,6 +159,7 @@
       margin-bottom: 14px;
       overflow: hidden;
     }
+
     #cal-fill {
       height: 100%;
       background: #ffa726;
@@ -187,21 +180,18 @@
   <h1>Cylinder Monitor</h1>
   <div id="status-bar">Loading Pyodide…</div>
 
-  <!-- Calibration progress -->
   <div id="cal-progress" style="width:100%;max-width:480px;">
     <div id="cal-fill"></div>
   </div>
 
-  <!-- Live metric -->
   <div class="card">
     <h2>Last Measurement</h2>
     <div id="metric-speed">—</div>
     <div id="metric-delta">— ms</div>
     <div id="metric-label">in/sec &nbsp;|&nbsp; stroke time</div>
-    <div id="debug-bar">baseline: — &nbsp;|&nbsp; threshold: — &nbsp;|&nbsp; hfEnergy: —</div>
+    <div id="debug-bar">baseline: — | threshold: — | hfEnergy: —</div>
   </div>
 
-  <!-- Controls -->
   <div class="card">
     <h2>Settings</h2>
     <div class="row">
@@ -222,7 +212,6 @@
     </div>
   </div>
 
-  <!-- Cycle log -->
   <div class="card">
     <h2>Cycle Log</h2>
     <table id="cycle-table">
@@ -240,248 +229,239 @@
     </table>
   </div>
 
-<script type="module">
-// ─── Pyodide bootstrap ────────────────────────────────────────────────────────
-const statusBar = document.getElementById('status-bar');
-
-function setStatus(msg, cls = '') {
-  statusBar.textContent = msg;
-  statusBar.className = cls;
-}
-
-setStatus('Loading Pyodide…', 'cal');
-
-// Load Pyodide from CDN
-const pyodide = await loadPyodide({
-  indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.1/full/'
-});
-
-setStatus('Loading numpy…', 'cal');
-await pyodide.loadPackage('numpy');
-
-setStatus('Loading detector…', 'cal');
-const detectorCode = await fetch('detector.py').then(r => r.text());
-await pyodide.runPythonAsync(detectorCode);
-
-setStatus('Ready — press Start', 'ready');
-
-// ─── State ────────────────────────────────────────────────────────────────────
-let audioCtx   = null;
-let processor  = null;
-let running    = false;
-let currentBaseline  = null;
-let currentThreshold = null;
-
-// ─── UI helpers ──────────────────────────────────────────────────────────────
-const calFill     = document.getElementById('cal-fill');
-const metricSpeed = document.getElementById('metric-speed');
-const metricDelta = document.getElementById('metric-delta');
-const debugBar    = document.getElementById('debug-bar');
-const cycleBody   = document.getElementById('cycle-body');
-
-function updateCalUI(pct) {
-  calFill.style.width = pct + '%';
-  setStatus(`Calibrating… ${pct}%`, 'cal');
-}
-
-function onReady() {
-  calFill.style.width = '100%';
-  calFill.style.background = '#66bb6a';
-  setStatus('Listening…', 'ready');
-}
-
-function updateDebug(baseline, hfEnergy) {
-  const thr = baseline ? (baseline * parseFloat(document.getElementById('multiplier').value)).toFixed(5) : '—';
-  const bl  = baseline ? baseline.toFixed(5) : '—';
-  const hf  = hfEnergy !== undefined ? hfEnergy.toFixed(5) : '—';
-  debugBar.textContent = `baseline: ${bl}  |  threshold: ${thr}  |  hfEnergy: ${hf}`;
-}
-
-function addCycleToUI(n, delta_ms, speed, ts) {
-  // Remove empty placeholder
-  const empty = cycleBody.querySelector('.empty-log');
-  if (empty) empty.parentElement.remove();
-
-  const tr = document.createElement('tr');
-  tr.innerHTML = `
-    <td>${n}</td>
-    <td>${ts}</td>
-    <td>${delta_ms.toFixed(2)}</td>
-    <td>${speed.toFixed(3)}</td>
-  `;
-  // Prepend so newest is at top
-  cycleBody.insertBefore(tr, cycleBody.firstChild);
-
-  // Update big metric
-  metricSpeed.textContent = speed.toFixed(2);
-  metricDelta.textContent = delta_ms.toFixed(2) + ' ms';
-  metricSpeed.style.color = '#66bb6a';
-  setTimeout(() => { metricSpeed.style.color = '#4fc3f7'; }, 600);
-}
-
-function updateStatusUI(status) {
-  const labels = {
-    listen:    'Listening…',
-    breakaway: '⚡ Breakaway detected',
-    debounce:  'Debounce…',
-    noise:     'Noise (too short)',
-    timeout:   'Timeout — reset',
-  };
-  if (labels[status]) setStatus(labels[status], status === 'breakaway' ? 'cal' : 'ready');
-}
-
-// ─── Audio pipeline ───────────────────────────────────────────────────────────
-async function startAudio() {
-  audioCtx = new AudioContext({ sampleRate: 48000 });
-  await audioCtx.audioWorklet.addModule('processor.js');
-
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: {
-      echoCancellation: false,
-      noiseSuppression: false,
-      autoGainControl:  false,
-      sampleRate:       48000,
-      channelCount:     2
-    }
-  });
-
-  const source = audioCtx.createMediaStreamSource(stream);
-
-  processor = new AudioWorkletNode(audioCtx, 'cylinder-processor', {
-    processorOptions: {
-      chunkSamples: 480,
-      sampleRate:   48000,
-      hfBinLow:     10,
-      hfBinHigh:    100,
-      hfFloor:      parseFloat(document.getElementById('hf-floor').value)
-    }
-  });
-
-  // ── Message handler ──────────────────────────────────────────────────────
-  processor.port.onmessage = async (e) => {
-
-    if (e.data.type === 'rms') {
-      // Feed single RMS value to Pyodide for calibration / adaptive baseline
-      // We pass a flat array of identical values — cal only needs the RMS magnitude
-      try {
-        const samples = new Array(480).fill(e.data.value);
-        const result  = await pyodide.runPythonAsync(
-          `process_chunk([${samples.join(',')}])`
-        );
-        const [status] = result.toJs ? result.toJs() : result;
-
-        if (typeof status === 'string' && status.startsWith('cal:')) {
-          const pct = parseInt(status.split(':')[1]);
-          updateCalUI(pct);
-        } else if (status === 'ready') {
-          onReady();
-          // Get initial baseline and push threshold to worklet
-          currentBaseline = await pyodide.runPythonAsync('get_baseline()');
-          currentThreshold = currentBaseline * parseFloat(document.getElementById('multiplier').value);
-          processor.port.postMessage({ type: 'set_threshold', value: currentThreshold });
-          updateDebug(currentBaseline, undefined);
-        }
-      } catch (err) {
-        console.warn('rms handler error:', err);
-      }
-    }
-
-    if (e.data.type === 'gated') {
-      // FFT gate fired — chunk was loud but low-frequency, discarded
-      console.debug('gated chunk — rms:', e.data.rms.toFixed(5), 'hfEnergy:', e.data.hfEnergy.toFixed(5));
-      updateDebug(currentBaseline, e.data.hfEnergy);
-    }
-
-    if (e.data.type === 'spike') {
-      // Passed RMS threshold AND FFT gate — send to Pyodide for cycle logic
-      try {
-        const samples = new Array(480).fill(e.data.rms);
-        const result  = await pyodide.runPythonAsync(
-          `process_chunk([${samples.join(',')}])`
-        );
-        const arr = result.toJs ? result.toJs() : result;
-        const [status, n, delta_ms, speed, ts] = arr;
-
-        updateDebug(currentBaseline, e.data.hfEnergy);
-
-        if (status === 'cycle') {
-          addCycleToUI(n, delta_ms, speed, ts);
-        } else {
-          updateStatusUI(status);
-        }
-
-        // Refresh adaptive baseline and push updated threshold to worklet
-        currentBaseline  = await pyodide.runPythonAsync('get_baseline()');
-        if (currentBaseline) {
-          currentThreshold = currentBaseline * parseFloat(document.getElementById('multiplier').value);
-          processor.port.postMessage({ type: 'set_threshold', value: currentThreshold });
-        }
-      } catch (err) {
-        console.warn('spike handler error:', err);
-      }
-    }
-  };
-
-  source.connect(processor);
-  processor.connect(audioCtx.destination);
-}
-
-// ─── Button handlers ──────────────────────────────────────────────────────────
-document.getElementById('btn-start').addEventListener('click', async () => {
-  if (running) return;
-  running = true;
-  document.getElementById('btn-start').disabled = true;
-
-  // Apply settings to Pyodide tracker
-  const strokeIn   = parseFloat(document.getElementById('stroke-in').value)   || 1.0;
-  const multiplier = parseFloat(document.getElementById('multiplier').value)   || 5;
-  await pyodide.runPythonAsync(`reset_tracker(stroke_in=${strokeIn}, multiplier=${multiplier})`);
-
-  // Reset cal bar
-  calFill.style.background = '#ffa726';
-  calFill.style.width = '0%';
-
-  setStatus('Starting mic…', 'cal');
-  try {
-    await startAudio();
-  } catch (err) {
-    setStatus('Mic error: ' + err.message, 'error');
-    running = false;
-    document.getElementById('btn-start').disabled = false;
-  }
-});
-
-document.getElementById('btn-reset').addEventListener('click', async () => {
-  if (audioCtx) {
-    await audioCtx.close();
-    audioCtx  = null;
-    processor = null;
-  }
-  running = false;
-  document.getElementById('btn-start').disabled = false;
-
-  const strokeIn   = parseFloat(document.getElementById('stroke-in').value)   || 1.0;
-  const multiplier = parseFloat(document.getElementById('multiplier').value)   || 5;
-  await pyodide.runPythonAsync(`reset_tracker(stroke_in=${strokeIn}, multiplier=${multiplier})`);
-
-  calFill.style.width = '0%';
-  calFill.style.background = '#ffa726';
-  metricSpeed.textContent = '—';
-  metricDelta.textContent = '— ms';
-  metricSpeed.style.color = '#4fc3f7';
-  cycleBody.innerHTML = '<tr><td colspan="4" class="empty-log">No cycles yet</td></tr>';
-  debugBar.textContent = 'baseline: — | threshold: — | hfEnergy: —';
-  setStatus('Ready — press Start', 'ready');
-});
-
-// ─── Service worker registration ──────────────────────────────────────────────
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service_worker.js').catch(console.warn);
-}
-</script>
-
-<!-- Pyodide loader — must be in <body> after <script type="module"> reference -->
 <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+<script>
+(async () => {
+  const statusBar  = document.getElementById('status-bar');
+  const calFill    = document.getElementById('cal-fill');
+  const metricSpeed = document.getElementById('metric-speed');
+  const metricDelta = document.getElementById('metric-delta');
+  const debugBar   = document.getElementById('debug-bar');
+  const cycleBody  = document.getElementById('cycle-body');
+
+  function setStatus(msg, cls = '') {
+    statusBar.textContent = msg;
+    statusBar.className = cls;
+  }
+
+  function updateDebug(baseline, threshold, hfEnergy) {
+    const bl  = baseline  != null ? baseline.toFixed(5)  : '—';
+    const thr = threshold != null ? threshold.toFixed(5) : '—';
+    const hf  = hfEnergy  != null ? hfEnergy.toFixed(5)  : '—';
+    debugBar.textContent = `baseline: ${bl} | threshold: ${thr} | hfEnergy: ${hf}`;
+  }
+
+  function addCycleToUI(n, delta_ms, speed, ts) {
+    const empty = cycleBody.querySelector('.empty-log');
+    if (empty) empty.parentElement.remove();
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${n}</td><td>${ts}</td><td>${parseFloat(delta_ms).toFixed(2)}</td><td>${parseFloat(speed).toFixed(3)}</td>`;
+    cycleBody.insertBefore(tr, cycleBody.firstChild);
+    metricSpeed.textContent = parseFloat(speed).toFixed(2);
+    metricDelta.textContent = parseFloat(delta_ms).toFixed(2) + ' ms';
+    metricSpeed.style.color = '#66bb6a';
+    setTimeout(() => { metricSpeed.style.color = '#4fc3f7'; }, 600);
+  }
+
+  // ── Pyodide init ────────────────────────────────────────────────────────────
+  setStatus('Loading Pyodide…', 'cal');
+  const pyodide = await loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.1/full/' });
+
+  setStatus('Loading numpy…', 'cal');
+  await pyodide.loadPackage('numpy');
+
+  setStatus('Loading detector…', 'cal');
+  const detectorCode = await fetch('detector.py').then(r => r.text());
+  await pyodide.runPythonAsync(detectorCode);
+
+  setStatus('Ready — press Start', 'ready');
+
+  // ── State ───────────────────────────────────────────────────────────────────
+  let audioCtx  = null;
+  let processor = null;
+  let running   = false;
+  let currentBaseline  = null;
+  let currentThreshold = null;
+  let calDone   = false;
+
+  // ── Audio pipeline ──────────────────────────────────────────────────────────
+  async function startAudio() {
+    audioCtx = new AudioContext({ sampleRate: 48000 });
+
+    // Resume AudioContext — required after user gesture
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+    await audioCtx.audioWorklet.addModule('processor.js');
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl:  false,
+        channelCount:     2
+      }
+    });
+
+    const source = audioCtx.createMediaStreamSource(stream);
+
+    const multiplier = parseFloat(document.getElementById('multiplier').value) || 5;
+    const hfFloor    = parseFloat(document.getElementById('hf-floor').value);
+
+    processor = new AudioWorkletNode(audioCtx, 'cylinder-processor', {
+      processorOptions: {
+        chunkSamples: 480,
+        sampleRate:   48000,
+        hfBinLow:     10,
+        hfBinHigh:    100,
+        hfFloor:      hfFloor
+      }
+    });
+
+    // ── Message handler ───────────────────────────────────────────────────────
+    processor.port.onmessage = async (e) => {
+
+      // ── RMS: calibration phase ──────────────────────────────────────────────
+      if (e.data.type === 'rms') {
+        if (calDone) return; // stop feeding Pyodide rms after cal complete
+
+        try {
+          const samples = new Array(480).fill(e.data.value);
+          const result  = await pyodide.runPythonAsync(
+            `process_chunk([${samples.join(',')}])`
+          );
+          const arr    = result.toJs ? result.toJs() : Array.from(result);
+          const status = arr[0];
+
+          if (typeof status === 'string' && status.startsWith('cal:')) {
+            const pct = parseInt(status.split(':')[1]);
+            calFill.style.width = pct + '%';
+            setStatus(`Calibrating… ${pct}%`, 'cal');
+
+          } else if (status === 'ready') {
+            calDone = true;
+            calFill.style.width = '100%';
+            calFill.style.background = '#66bb6a';
+            setStatus('Listening…', 'ready');
+
+            // ── KEY FIX: push threshold to worklet immediately on cal complete ──
+            currentBaseline  = await pyodide.runPythonAsync('get_baseline()');
+            const mult       = parseFloat(document.getElementById('multiplier').value) || 5;
+            currentThreshold = currentBaseline * mult;
+            processor.port.postMessage({ type: 'set_threshold', value: currentThreshold });
+            updateDebug(currentBaseline, currentThreshold, null);
+            console.log('Cal complete. Baseline:', currentBaseline, 'Threshold:', currentThreshold);
+          }
+        } catch (err) {
+          console.warn('rms handler error:', err);
+        }
+      }
+
+      // ── Gated: FFT blocked a loud chunk ────────────────────────────────────
+      if (e.data.type === 'gated') {
+        console.debug('GATED — rms:', e.data.rms.toFixed(5), 'hfEnergy:', e.data.hfEnergy.toFixed(5));
+        updateDebug(currentBaseline, currentThreshold, e.data.hfEnergy);
+      }
+
+      // ── Spike: passed RMS threshold and FFT gate ────────────────────────────
+      if (e.data.type === 'spike') {
+        console.log('SPIKE — rms:', e.data.rms.toFixed(5), 'hfEnergy:', e.data.hfEnergy != null ? e.data.hfEnergy.toFixed(5) : 'n/a');
+        updateDebug(currentBaseline, currentThreshold, e.data.hfEnergy);
+
+        try {
+          const samples = new Array(480).fill(e.data.rms);
+          const result  = await pyodide.runPythonAsync(
+            `process_chunk([${samples.join(',')}])`
+          );
+          const arr    = result.toJs ? result.toJs() : Array.from(result);
+          const [status, n, delta_ms, speed, ts] = arr;
+
+          console.log('Pyodide status:', status, '| delta_ms:', delta_ms, '| speed:', speed);
+
+          if (status === 'cycle') {
+            addCycleToUI(n, delta_ms, speed, ts);
+          } else {
+            const labels = {
+              breakaway: '⚡ Breakaway detected',
+              debounce:  'Debounce…',
+              noise:     'Noise (too short)',
+              timeout:   'Timeout — reset',
+              listen:    'Listening…',
+            };
+            setStatus(labels[status] || status, 'ready');
+          }
+
+          // Refresh adaptive baseline and push updated threshold to worklet
+          currentBaseline  = await pyodide.runPythonAsync('get_baseline()');
+          if (currentBaseline) {
+            const mult       = parseFloat(document.getElementById('multiplier').value) || 5;
+            currentThreshold = currentBaseline * mult;
+            processor.port.postMessage({ type: 'set_threshold', value: currentThreshold });
+          }
+
+        } catch (err) {
+          console.warn('spike handler error:', err);
+        }
+      }
+    };
+
+    source.connect(processor);
+    processor.connect(audioCtx.destination);
+  }
+
+  // ── Buttons ─────────────────────────────────────────────────────────────────
+  document.getElementById('btn-start').addEventListener('click', async () => {
+    if (running) return;
+    running = true;
+    calDone = false;
+    document.getElementById('btn-start').disabled = true;
+
+    const strokeIn   = parseFloat(document.getElementById('stroke-in').value)   || 1.0;
+    const multiplier = parseFloat(document.getElementById('multiplier').value)   || 5;
+    await pyodide.runPythonAsync(`reset_tracker(stroke_in=${strokeIn}, multiplier=${multiplier})`);
+
+    calFill.style.background = '#ffa726';
+    calFill.style.width = '0%';
+    setStatus('Starting mic…', 'cal');
+
+    try {
+      await startAudio();
+    } catch (err) {
+      setStatus('Mic error: ' + err.message, 'error');
+      console.error(err);
+      running = false;
+      document.getElementById('btn-start').disabled = false;
+    }
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', async () => {
+    if (audioCtx) { await audioCtx.close(); audioCtx = null; processor = null; }
+    running  = false;
+    calDone  = false;
+    currentBaseline  = null;
+    currentThreshold = null;
+    document.getElementById('btn-start').disabled = false;
+
+    const strokeIn   = parseFloat(document.getElementById('stroke-in').value)   || 1.0;
+    const multiplier = parseFloat(document.getElementById('multiplier').value)   || 5;
+    await pyodide.runPythonAsync(`reset_tracker(stroke_in=${strokeIn}, multiplier=${multiplier})`);
+
+    calFill.style.width = '0%';
+    calFill.style.background = '#ffa726';
+    metricSpeed.textContent = '—';
+    metricDelta.textContent = '— ms';
+    metricSpeed.style.color = '#4fc3f7';
+    cycleBody.innerHTML = '<tr><td colspan="4" class="empty-log">No cycles yet</td></tr>';
+    debugBar.textContent = 'baseline: — | threshold: — | hfEnergy: —';
+    setStatus('Ready — press Start', 'ready');
+  });
+
+  // ── Service worker ───────────────────────────────────────────────────────────
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service_worker.js').catch(console.warn);
+  }
+
+})();
+</script>
 
 </body>
 </html>

@@ -1,4 +1,4 @@
-const CACHE = "cyl-v3";
+const CACHE = "cyl-v4";
 const FILES = [
   "/cylinder-monitor/",
   "/cylinder-monitor/index.html",
