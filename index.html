@@ -276,7 +276,9 @@
         processor = new AudioWorkletNode(audioCtx, 'cylinder-processor', {
           processorOptions: {
             chunkSamples: 480, sampleRate: 48000,
-            hfBinLow: 10, hfBinHigh: 100, hfFloor: s.hfFloor
+            hfBinLow: 10, hfBinHigh: 100,
+            hfFloor: s.hfFloor,
+            debounceMs: s.debounceMs        // FIX: pass debounce at construction
           }
         });
 
@@ -286,8 +288,9 @@
           if (e.data.type === 'rms') {
             if (calDone) return;
             try {
+              // FIX: use audioCtx.currentTime as timestamp, not the RMS value
               const result = await pyodide.runPythonAsync(
-                `process_chunk(${e.data.value}, ${e.data.value})`
+                `process_chunk(${e.data.value}, ${audioCtx.currentTime})`
               );
               const arr    = result.toJs ? result.toJs() : Array.from(result);
               const status = arr[0];
@@ -320,17 +323,17 @@
             updateDebug(currentBaseline, currentThreshold, e.data.hfEnergy);
 
             try {
-              // Pass ring buffer snapshot to Python as list of [rms, t] pairs
-              const ring = JSON.stringify(e.data.ringBuffer);
-              const ts   = e.data.timestamp / 1000;  // convert ms → s
+              const ts = e.data.timestamp / 1000;  // worklet ms → s
 
-              // Feed ring buffer into Python, then trigger spike processing
+              // FIX: pass ring buffer as a live Python object — no JSON string interpolation
+              // FIX: clear ring buffer before injection to prevent stale entry accumulation
+              pyodide.globals.set('_ring_js', e.data.ringBuffer);
               await pyodide.runPythonAsync(`
-import json
-_ring = json.loads('${ring.replace(/'/g, "\\'")}')
-for _rms, _t in _ring[:-1]:
+tracker.ring_buffer.clear()
+for _rms, _t in _ring_js:
     tracker.ring_buffer.append((_rms, _t / 1000))
 `);
+
               const result = await pyodide.runPythonAsync(
                 `process_chunk(${e.data.rms}, ${ts})`
               );
@@ -370,6 +373,10 @@ for _rms, _t in _ring[:-1]:
           `breakaway_mult=${s.breakawayMult}, debounce_ms=${s.debounceMs}, ` +
           `max_lookback_ms=${s.maxLookback}, min_lookback_ms=${s.minLookback})`
         );
+        // FIX: sync debounce to worklet whenever settings are applied
+        if (processor) {
+          processor.port.postMessage({ type: 'set_debounce', value: s.debounceMs });
+        }
       }
 
       document.getElementById('btn-start').addEventListener('click', async () => {

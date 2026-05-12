@@ -1,6 +1,7 @@
 // processor.js — AudioWorkletProcessor
-// v4: ring buffer in worklet, RMS sent every chunk for cal/baseline,
+// v5: ring buffer in worklet, RMS sent every chunk for cal/baseline,
 //     spike fired on hard hit only — lookback handled in detector.py
+//     debounce synced from main thread via set_debounce message
 //
 // Pipeline per 10ms chunk:
 //   1. Compute additive combined signal (|ch0| + |ch1|)
@@ -20,7 +21,7 @@ class CylinderProcessor extends AudioWorkletProcessor {
 
     // Detection state
     this.threshold     = null;   // impact threshold — set from main thread after cal
-    this.debounceMs    = 50;
+    this.debounceMs    = options.processorOptions?.debounceMs ?? 50;
     this.lastSpikeTime = -Infinity;
 
     // FFT gate
