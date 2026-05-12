@@ -205,6 +205,8 @@
     async function initPython() {
       setStatus("Loading Python...", AMBER);
       pyodide = await loadPyodide();
+      await pyodide.loadPackage("numpy");
+
 
       // Fetch and run detector.py
       const resp = await fetch("detector.py");
