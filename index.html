@@ -8,20 +8,16 @@
   <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       background: #0a0a0a; color: #e0e0e0;
       font-family: 'Segoe UI', sans-serif;
       min-height: 100vh; display: flex; flex-direction: column;
-      align-items: center; padding-top: 70px; padding-bottom: 24px;
-      padding-left: 16px; padding-right: 16px;
+      align-items: center;
+      padding-top: 70px; padding-bottom: 24px; padding-left: 16px; padding-right: 16px;
     }
-
-    /* ── Fixed header ─────────────────────────────────────────────────────── */
     #fixed-header {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: #0a0a0a;
-      border-bottom: 1px solid #1e1e1e;
+      background: #0a0a0a; border-bottom: 1px solid #1e1e1e;
       display: flex; flex-direction: column; align-items: center;
       padding: 10px 16px 8px;
     }
@@ -30,8 +26,6 @@
     #status-bar.ready { color: #66bb6a; }
     #status-bar.error { color: #ef5350; }
     #status-bar.cal   { color: #ffa726; }
-
-    /* ── Cards ────────────────────────────────────────────────────────────── */
     .card {
       background: #1a1a1a; border: 1px solid #2a2a2a;
       border-radius: 10px; padding: 20px;
@@ -41,8 +35,6 @@
       font-size: 0.8rem; text-transform: uppercase;
       letter-spacing: 0.1em; color: #555; margin-bottom: 14px;
     }
-
-    /* ── Last Measurement ─────────────────────────────────────────────────── */
     #metric-speed { font-size: 3.5rem; font-weight: 700; color: #4fc3f7; text-align: center; line-height: 1; }
     #metric-delta { font-size: 1.1rem; color: #888; text-align: center; margin-top: 6px; }
     #metric-label { font-size: 0.75rem; color: #555; text-align: center; margin-top: 4px; }
@@ -50,7 +42,7 @@
     #cal-progress { height: 4px; background: #222; border-radius: 2px; margin-bottom: 14px; overflow: hidden; }
     #cal-fill     { height: 100%; background: #ffa726; width: 0%; transition: width 0.1s; }
 
-    /* ── Cycle log table ──────────────────────────────────────────────────── */
+    /* Cycle log */
     #cycle-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
     #cycle-table th {
       color: #555; text-align: left; padding: 4px 8px;
@@ -59,15 +51,16 @@
     }
     #cycle-table td { padding: 6px 8px; border-bottom: 1px solid #1e1e1e; color: #ccc; }
     #cycle-table tr:last-child td { border-bottom: none; }
-    .empty-log { color: #444; font-size: 0.8rem; text-align: center; padding: 12px 0; }
-    /* extra debug columns — hidden by default */
     .col-rms, .col-hf { display: none; }
     body.show-rms .col-rms { display: table-cell; }
     body.show-hf  .col-hf  { display: table-cell; }
+    .empty-log { color: #444; font-size: 0.8rem; text-align: center; padding: 12px 0; }
+    td.unmatched { color: #ef5350; }
+    td.confirmed { color: #66bb6a; }
 
-    /* ── Settings ─────────────────────────────────────────────────────────── */
+    /* Settings */
     .row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
-    label { font-size: 0.8rem; color: #888; min-width: 140px; }
+    label { font-size: 0.8rem; color: #888; min-width: 150px; }
     input[type="number"] {
       background: #111; border: 1px solid #333; border-radius: 6px;
       color: #e0e0e0; padding: 6px 10px; font-size: 0.9rem; width: 90px;
@@ -75,7 +68,6 @@
     .check-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
     .check-row label { min-width: unset; font-size: 0.8rem; color: #888; }
     input[type="checkbox"] { accent-color: #4fc3f7; width: 15px; height: 15px; cursor: pointer; }
-
     button {
       background: #4fc3f7; color: #000; border: none; border-radius: 8px;
       padding: 10px 22px; font-size: 0.95rem; font-weight: 600;
@@ -85,11 +77,14 @@
     button:active { background: #29b6f6; }
     button.danger       { background: #ef5350; color: #fff; }
     button.danger:hover { background: #e57373; }
+    .section-label {
+      font-size: 0.75rem; color: #555; text-transform: uppercase;
+      letter-spacing: 0.08em; margin-top: 10px; margin-bottom: 4px;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Fixed header -->
   <div id="fixed-header">
     <h1>Cylinder Monitor</h1>
     <div id="status-bar">Loading Pyodide…</div>
@@ -115,12 +110,14 @@
           <th>Time</th>
           <th>Delta (ms)</th>
           <th>Speed (in/s)</th>
-          <th class="col-rms">RMS Ratio</th>
-          <th class="col-hf">HF Ratio</th>
+          <th>Status</th>
+          <th class="col-rms">T_start RMS×</th>
+          <th class="col-rms">T_end RMS×</th>
+          <th class="col-hf">HF×</th>
         </tr>
       </thead>
       <tbody id="cycle-body">
-        <tr><td colspan="6" class="empty-log">No cycles yet</td></tr>
+        <tr><td colspan="8" class="empty-log">No cycles yet</td></tr>
       </tbody>
     </table>
   </div>
@@ -128,13 +125,19 @@
   <!-- Settings -->
   <div class="card">
     <h2>Settings</h2>
+
+    <div class="section-label">Detection</div>
     <div class="row">
       <label>Stroke length (in)</label>
       <input type="number" id="stroke-in" value="1.0" step="0.1" min="0.1" />
     </div>
     <div class="row">
-      <label>Multiplier</label>
-      <input type="number" id="multiplier" value="5" step="1" min="1" />
+      <label>Impact multiplier</label>
+      <input type="number" id="impact-mult" value="5" step="1" min="1" />
+    </div>
+    <div class="row">
+      <label>Breakaway multiplier</label>
+      <input type="number" id="breakaway-mult" value="3" step="0.5" min="0.5" />
     </div>
     <div class="row">
       <label>HF Floor</label>
@@ -145,20 +148,27 @@
       <input type="number" id="debounce-ms" value="50" step="5" min="0" />
     </div>
 
-    <!-- Debug column toggles -->
-    <div style="margin-top:10px; margin-bottom:4px; font-size:0.75rem; color:#555; text-transform:uppercase; letter-spacing:0.08em;">
-      Cycle Log Debug Columns
+    <div class="section-label">Lookback Window</div>
+    <div class="row">
+      <label>Min lookback (ms)</label>
+      <input type="number" id="min-lookback" value="15" step="5" min="5" />
     </div>
+    <div class="row">
+      <label>Max lookback (ms)</label>
+      <input type="number" id="max-lookback" value="100" step="10" min="10" />
+    </div>
+
+    <div class="section-label">Cycle Log Debug Columns</div>
     <div class="check-row">
       <input type="checkbox" id="chk-rms" />
-      <label for="chk-rms">Show RMS Ratio</label>
+      <label for="chk-rms">Show RMS Ratios (T_start × / T_end ×)</label>
     </div>
     <div class="check-row">
       <input type="checkbox" id="chk-hf" />
       <label for="chk-hf">Show HF Ratio</label>
     </div>
 
-    <div class="row" style="margin-top:12px;">
+    <div class="row" style="margin-top:14px;">
       <button id="btn-start">Start</button>
       <button id="btn-reset" class="danger">Reset</button>
     </div>
@@ -173,19 +183,14 @@
       const debugBar    = document.getElementById('debug-bar');
       const cycleBody   = document.getElementById('cycle-body');
 
-      // ── Debug column checkboxes ──────────────────────────────────────────
-      document.getElementById('chk-rms').addEventListener('change', e => {
-        document.body.classList.toggle('show-rms', e.target.checked);
-      });
-      document.getElementById('chk-hf').addEventListener('change', e => {
-        document.body.classList.toggle('show-hf', e.target.checked);
-      });
+      document.getElementById('chk-rms').addEventListener('change', e =>
+        document.body.classList.toggle('show-rms', e.target.checked));
+      document.getElementById('chk-hf').addEventListener('change', e =>
+        document.body.classList.toggle('show-hf', e.target.checked));
 
       function setStatus(msg, cls = '') {
-        statusBar.textContent = msg;
-        statusBar.className = cls;
+        statusBar.textContent = msg; statusBar.className = cls;
       }
-
       function updateDebug(baseline, threshold, hfEnergy) {
         const bl  = baseline  != null ? baseline.toFixed(5)  : '—';
         const thr = threshold != null ? threshold.toFixed(5) : '—';
@@ -193,28 +198,38 @@
         debugBar.textContent = `baseline: ${bl} | threshold: ${thr} | hfEnergy: ${hf}`;
       }
 
-      // Store last spike values so we can attach them to the cycle row
-      let lastSpikeRms = null;
-      let lastSpikeHf  = null;
-
-      function addCycleToUI(n, delta_ms, speed, ts) {
+      function addCycleToUI(n, delta_ms, speed, ts, status, tend_rms, tstart_rms, hfEnergy, threshold) {
         const empty = cycleBody.querySelector('.empty-log');
         if (empty) empty.parentElement.remove();
+
+        const isConfirmed = status === 'cycle';
+        const statusCell  = isConfirmed ? '✓' : '✗ no T_start';
+        const deltaCell   = delta_ms != null ? parseFloat(delta_ms).toFixed(2) : '—';
+        const speedCell   = speed    != null ? parseFloat(speed).toFixed(3)    : '—';
+
+        // Ratios relative to impact threshold
+        const tStartRatio = (tstart_rms != null && threshold) ? (tstart_rms / threshold).toFixed(2) + '×' : '—';
+        const tEndRatio   = (tend_rms   != null && threshold) ? (tend_rms   / threshold).toFixed(2) + '×' : '—';
+        const hfRatio     = (hfEnergy   != null && threshold) ? (hfEnergy   / threshold).toFixed(2) + '×' : '—';
+
         const tr = document.createElement('tr');
-        const rmsVal = (lastSpikeRms != null && currentThreshold) ? (lastSpikeRms / currentThreshold).toFixed(2) + "00d7" : "—";
-        const hfVal  = (lastSpikeHf != null && currentThreshold) ? (lastSpikeHf / currentThreshold).toFixed(2) + "00d7" : "—";
         tr.innerHTML = `
           <td>${n}</td>
           <td>${ts}</td>
-          <td>${parseFloat(delta_ms).toFixed(2)}</td>
-          <td>${parseFloat(speed).toFixed(3)}</td>
-          <td class="col-rms">${rmsVal}</td>
-          <td class="col-hf">${hfVal}</td>`;
+          <td class="${isConfirmed ? 'confirmed' : 'unmatched'}">${deltaCell}</td>
+          <td>${speedCell}</td>
+          <td class="${isConfirmed ? 'confirmed' : 'unmatched'}">${statusCell}</td>
+          <td class="col-rms">${tStartRatio}</td>
+          <td class="col-rms">${tEndRatio}</td>
+          <td class="col-hf">${hfRatio}</td>`;
         cycleBody.insertBefore(tr, cycleBody.firstChild);
-        metricSpeed.textContent = parseFloat(speed).toFixed(2);
-        metricDelta.textContent = parseFloat(delta_ms).toFixed(2) + ' ms';
-        metricSpeed.style.color = '#66bb6a';
-        setTimeout(() => { metricSpeed.style.color = '#4fc3f7'; }, 600);
+
+        if (isConfirmed) {
+          metricSpeed.textContent = parseFloat(speed).toFixed(2);
+          metricDelta.textContent = parseFloat(delta_ms).toFixed(2) + ' ms';
+          metricSpeed.style.color = '#66bb6a';
+          setTimeout(() => { metricSpeed.style.color = '#4fc3f7'; }, 600);
+        }
       }
 
       // ── Pyodide init ─────────────────────────────────────────────────────
@@ -227,56 +242,55 @@
       await pyodide.runPythonAsync(detectorCode);
       setStatus('Ready — press Start', 'ready');
 
-      // ── State ────────────────────────────────────────────────────────────
-      let audioCtx = null;
-      let processor = null;
-      let running   = false;
-      let calDone   = false;
-      let currentBaseline  = null;
-      let currentThreshold = null;
+      // ── State ─────────────────────────────────────────────────────────────
+      let audioCtx = null, processor = null;
+      let running = false, calDone = false;
+      let currentBaseline = null, currentThreshold = null;
 
-      // ── Settings helpers ─────────────────────────────────────────────────
-      function getStrokeIn()   { return parseFloat(document.getElementById('stroke-in').value)   || 1.0; }
-      function getMultiplier() { return parseFloat(document.getElementById('multiplier').value)  || 5;   }
-      function getHfFloor()    { return parseFloat(document.getElementById('hf-floor').value);           }
-      function getDebounceMs() { return parseFloat(document.getElementById('debounce-ms').value) || 50;  }
+      // ── Settings helpers ──────────────────────────────────────────────────
+      const g = id => parseFloat(document.getElementById(id).value);
+      function getSettings() {
+        return {
+          strokeIn:      g('stroke-in')      || 1.0,
+          impactMult:    g('impact-mult')     || 5,
+          breakawayMult: g('breakaway-mult')  || 3,
+          hfFloor:       g('hf-floor'),
+          debounceMs:    g('debounce-ms')     || 50,
+          minLookback:   g('min-lookback')    || 15,
+          maxLookback:   g('max-lookback')    || 100,
+        };
+      }
 
-      // ── Audio pipeline ───────────────────────────────────────────────────
+      // ── Audio pipeline ────────────────────────────────────────────────────
       async function startAudio() {
+        const s = getSettings();
         audioCtx = new AudioContext({ sampleRate: 48000 });
         if (audioCtx.state === 'suspended') await audioCtx.resume();
         await audioCtx.audioWorklet.addModule('processor.js');
 
         const stream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: false,
-            noiseSuppression: false,
-            autoGainControl: false,
-            channelCount: 2
-          }
+          audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 2 }
         });
 
         const source = audioCtx.createMediaStreamSource(stream);
         processor = new AudioWorkletNode(audioCtx, 'cylinder-processor', {
           processorOptions: {
-            chunkSamples: 480,
-            sampleRate:   48000,
-            hfBinLow:     10,
-            hfBinHigh:    100,
-            hfFloor:      getHfFloor()
+            chunkSamples: 480, sampleRate: 48000,
+            hfBinLow: 10, hfBinHigh: 100, hfFloor: s.hfFloor
           }
         });
 
         processor.port.onmessage = async (e) => {
 
-          // ── RMS: calibration ─────────────────────────────────────────────
+          // ── Calibration RMS ───────────────────────────────────────────────
           if (e.data.type === 'rms') {
             if (calDone) return;
             try {
-              const samples = new Array(480).fill(e.data.value);
-              const result  = await pyodide.runPythonAsync(`process_chunk([${samples.join(',')}])`);
-              const arr     = result.toJs ? result.toJs() : Array.from(result);
-              const status  = arr[0];
+              const result = await pyodide.runPythonAsync(
+                `process_chunk(${e.data.value}, ${e.data.value})`
+              );
+              const arr    = result.toJs ? result.toJs() : Array.from(result);
+              const status = arr[0];
               if (typeof status === 'string' && status.startsWith('cal:')) {
                 const pct = parseInt(status.split(':')[1]);
                 calFill.style.width = pct + '%';
@@ -287,49 +301,60 @@
                 calFill.style.background = '#66bb6a';
                 setStatus('Listening…', 'ready');
                 currentBaseline  = await pyodide.runPythonAsync('get_baseline()');
-                currentThreshold = currentBaseline * getMultiplier();
+                currentThreshold = currentBaseline * s.impactMult;
                 processor.port.postMessage({ type: 'set_threshold', value: currentThreshold });
                 updateDebug(currentBaseline, currentThreshold, null);
               }
-            } catch (err) { console.warn('rms handler error:', err); }
+            } catch (err) { console.warn('rms error:', err); }
           }
 
-          // ── Gated: FFT blocked ───────────────────────────────────────────
+          // ── Gated ─────────────────────────────────────────────────────────
           if (e.data.type === 'gated') {
-            console.debug('GATED — rms:', e.data.rms.toFixed(5), 'hfEnergy:', e.data.hfEnergy.toFixed(5));
+            console.debug('GATED rms:', e.data.rms.toFixed(5), 'hf:', e.data.hfEnergy.toFixed(5));
             updateDebug(currentBaseline, currentThreshold, e.data.hfEnergy);
           }
 
-          // ── Spike: passed both gates ─────────────────────────────────────
+          // ── Spike (hard hit) — run lookback in Python ─────────────────────
           if (e.data.type === 'spike') {
-            lastSpikeRms = e.data.rms;
-            lastSpikeHf  = e.data.hfEnergy;
-            console.log('SPIKE — rms:', e.data.rms.toFixed(5), 'hfEnergy:', e.data.hfEnergy != null ? e.data.hfEnergy.toFixed(5) : 'n/a');
+            console.log('SPIKE rms:', e.data.rms.toFixed(5), 'hf:', e.data.hfEnergy.toFixed(5));
             updateDebug(currentBaseline, currentThreshold, e.data.hfEnergy);
+
             try {
-              const samples = new Array(480).fill(e.data.rms);
-              const result  = await pyodide.runPythonAsync(`process_chunk([${samples.join(',')}])`);
-              const arr     = result.toJs ? result.toJs() : Array.from(result);
-              const [status, n, delta_ms, speed, ts] = arr;
-              console.log('Pyodide status:', status, '| delta_ms:', delta_ms, '| speed:', speed);
-              if (status === 'cycle') {
-                addCycleToUI(n, delta_ms, speed, ts);
+              // Pass ring buffer snapshot to Python as list of [rms, t] pairs
+              const ring = JSON.stringify(e.data.ringBuffer);
+              const ts   = e.data.timestamp / 1000;  // convert ms → s
+
+              // Feed ring buffer into Python, then trigger spike processing
+              await pyodide.runPythonAsync(`
+import json
+_ring = json.loads('${ring.replace(/'/g, "\\'")}')
+for _rms, _t in _ring[:-1]:
+    tracker.ring_buffer.append((_rms, _t / 1000))
+`);
+              const result = await pyodide.runPythonAsync(
+                `process_chunk(${e.data.rms}, ${ts})`
+              );
+              const arr = result.toJs ? result.toJs() : Array.from(result);
+              const [status, n, delta_ms, speed, logTs, tend_rms, tstart_rms] = arr;
+
+              console.log('status:', status, 'delta_ms:', delta_ms, 'speed:', speed);
+
+              if (status === 'cycle' || status === 'unmatched') {
+                addCycleToUI(n, delta_ms, speed, logTs, status,
+                             tend_rms, tstart_rms, e.data.hfEnergy, currentThreshold);
               } else {
-                const labels = {
-                  breakaway: '⚡ Breakaway detected',
-                  debounce:  'Debounce…',
-                  noise:     'Noise (too short)',
-                  timeout:   'Timeout — reset',
-                  listen:    'Listening…',
-                };
+                const labels = { listen: 'Listening…', debounce: 'Debounce…', noise: 'Noise (too short)' };
                 setStatus(labels[status] || status, 'ready');
               }
+
+              // Refresh adaptive baseline
               currentBaseline = await pyodide.runPythonAsync('get_baseline()');
               if (currentBaseline) {
-                currentThreshold = currentBaseline * getMultiplier();
+                const s2 = getSettings();
+                currentThreshold = currentBaseline * s2.impactMult;
                 processor.port.postMessage({ type: 'set_threshold', value: currentThreshold });
               }
-            } catch (err) { console.warn('spike handler error:', err); }
+            } catch (err) { console.warn('spike error:', err); }
           }
         };
 
@@ -337,23 +362,25 @@
         processor.connect(audioCtx.destination);
       }
 
-      // ── Buttons ──────────────────────────────────────────────────────────
+      // ── Buttons ───────────────────────────────────────────────────────────
+      async function applyReset() {
+        const s = getSettings();
+        await pyodide.runPythonAsync(
+          `reset_tracker(stroke_in=${s.strokeIn}, impact_mult=${s.impactMult}, ` +
+          `breakaway_mult=${s.breakawayMult}, debounce_ms=${s.debounceMs}, ` +
+          `max_lookback_ms=${s.maxLookback}, min_lookback_ms=${s.minLookback})`
+        );
+      }
+
       document.getElementById('btn-start').addEventListener('click', async () => {
         if (running) return;
-        running = true;
-        calDone = false;
-        lastSpikeRms = null;
-        lastSpikeHf  = null;
+        running = true; calDone = false;
         document.getElementById('btn-start').disabled = true;
-        await pyodide.runPythonAsync(
-          `reset_tracker(stroke_in=${getStrokeIn()}, multiplier=${getMultiplier()}, debounce_ms=${getDebounceMs()})`
-        );
-        calFill.style.background = '#ffa726';
-        calFill.style.width = '0%';
+        await applyReset();
+        calFill.style.background = '#ffa726'; calFill.style.width = '0%';
         setStatus('Starting mic…', 'cal');
-        try {
-          await startAudio();
-        } catch (err) {
+        try { await startAudio(); }
+        catch (err) {
           setStatus('Mic error: ' + err.message, 'error');
           running = false;
           document.getElementById('btn-start').disabled = false;
@@ -362,22 +389,14 @@
 
       document.getElementById('btn-reset').addEventListener('click', async () => {
         if (audioCtx) { await audioCtx.close(); audioCtx = null; processor = null; }
-        running = false;
-        calDone = false;
-        currentBaseline  = null;
-        currentThreshold = null;
-        lastSpikeRms = null;
-        lastSpikeHf  = null;
+        running = false; calDone = false;
+        currentBaseline = null; currentThreshold = null;
         document.getElementById('btn-start').disabled = false;
-        await pyodide.runPythonAsync(
-          `reset_tracker(stroke_in=${getStrokeIn()}, multiplier=${getMultiplier()}, debounce_ms=${getDebounceMs()})`
-        );
-        calFill.style.width = '0%';
-        calFill.style.background = '#ffa726';
-        metricSpeed.textContent = '—';
-        metricDelta.textContent = '— ms';
+        await applyReset();
+        calFill.style.width = '0%'; calFill.style.background = '#ffa726';
+        metricSpeed.textContent = '—'; metricDelta.textContent = '— ms';
         metricSpeed.style.color = '#4fc3f7';
-        cycleBody.innerHTML = '<tr><td colspan="6" class="empty-log">No cycles yet</td></tr>';
+        cycleBody.innerHTML = '<tr><td colspan="8" class="empty-log">No cycles yet</td></tr>';
         debugBar.textContent = 'baseline: — | threshold: — | hfEnergy: —';
         setStatus('Ready — press Start', 'ready');
       });
