@@ -115,8 +115,8 @@
           <th>Time</th>
           <th>Delta (ms)</th>
           <th>Speed (in/s)</th>
-          <th class="col-rms">Peak RMS</th>
-          <th class="col-hf">hfEnergy</th>
+          <th class="col-rms">RMS Ratio</th>
+          <th class="col-hf">HF Ratio</th>
         </tr>
       </thead>
       <tbody id="cycle-body">
@@ -151,11 +151,11 @@
     </div>
     <div class="check-row">
       <input type="checkbox" id="chk-rms" />
-      <label for="chk-rms">Show Peak RMS</label>
+      <label for="chk-rms">Show RMS Ratio</label>
     </div>
     <div class="check-row">
       <input type="checkbox" id="chk-hf" />
-      <label for="chk-hf">Show hfEnergy</label>
+      <label for="chk-hf">Show HF Ratio</label>
     </div>
 
     <div class="row" style="margin-top:12px;">
@@ -201,8 +201,8 @@
         const empty = cycleBody.querySelector('.empty-log');
         if (empty) empty.parentElement.remove();
         const tr = document.createElement('tr');
-        const rmsVal = lastSpikeRms != null ? lastSpikeRms.toFixed(5) : '—';
-        const hfVal  = lastSpikeHf  != null ? lastSpikeHf.toFixed(5)  : '—';
+        const rmsVal = (lastSpikeRms != null && currentThreshold) ? (lastSpikeRms / currentThreshold).toFixed(2) + "00d7" : "—";
+        const hfVal  = (lastSpikeHf != null && currentThreshold) ? (lastSpikeHf / currentThreshold).toFixed(2) + "00d7" : "—";
         tr.innerHTML = `
           <td>${n}</td>
           <td>${ts}</td>
