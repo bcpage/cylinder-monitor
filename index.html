@@ -1,376 +1,487 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cylinder Monitor</title>
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.png" type="image/png" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       background: #0a0a0a;
-      color: #f0f0f0;
-      font-family: monospace;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      min-height: 100vh;
-      padding: 16px;
+      align-items: center;
+      padding: 24px 16px;
     }
-    h1 { color: #4fc3f7; font-size: 1.1em; margin-bottom: 12px; text-align: center; }
+
+    h1 {
+      color: #4fc3f7;
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+      letter-spacing: 0.05em;
+    }
 
     #status-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 12px;
-      font-size: 0.85em;
-      color: #555;
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 20px;
+      min-height: 1.2em;
     }
-    #dot { font-size: 1.2em; }
 
-    #big-display {
-      background: #141414;
+    #status-bar.ready  { color: #66bb6a; }
+    #status-bar.error  { color: #ef5350; }
+    #status-bar.cal    { color: #ffa726; }
+
+    .card {
+      background: #1a1a1a;
       border: 1px solid #2a2a2a;
-      padding: 16px;
-      margin-bottom: 12px;
+      border-radius: 10px;
+      padding: 20px;
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 16px;
     }
-    #lbl-last { font-size: 0.75em; color: #555; margin-bottom: 4px; }
-    #lbl-time { font-size: 2.4em; font-weight: bold; color: #f0f0f0; }
-    #lbl-speed { font-size: 1.4em; color: #4fc3f7; margin-top: 4px; }
 
-    #stats-bar {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .stat {
-      background: #141414;
-      border: 1px solid #2a2a2a;
-      padding: 8px;
-    }
-    .stat-label { font-size: 0.7em; color: #555; }
-    .stat-value { font-size: 1em; color: #f0f0f0; margin-top: 2px; }
-
-    #lap-header {
-      display: grid;
-      grid-template-columns: 2fr 3fr 3fr 3fr;
-      font-size: 0.75em;
+    .card h2 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
       color: #555;
-      padding: 4px 0;
-      border-bottom: 1px solid #2a2a2a;
-      margin-bottom: 4px;
-    }
-    #lap-list {
-      flex: 1;
-      overflow-y: auto;
-      max-height: 240px;
-      margin-bottom: 12px;
-    }
-    .lap-row {
-      display: grid;
-      grid-template-columns: 2fr 3fr 3fr 3fr;
-      font-size: 0.85em;
-      padding: 5px 0;
-      border-bottom: 1px solid #1a1a1a;
+      margin-bottom: 14px;
     }
 
-    #controls {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    button {
-      flex: 1;
-      padding: 14px;
-      border: none;
-      font-family: monospace;
-      font-size: 1em;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    #btn-start { background: #66bb6a; color: #0a0a0a; }
-    #btn-start.stop { background: #ef5350; color: #f0f0f0; }
-    #btn-reset { background: #1e1e1e; color: #f0f0f0; }
-
-    #settings {
-      display: flex;
-      gap: 16px;
-      font-size: 0.85em;
-      color: #555;
-      margin-bottom: 8px;
-    }
-    #settings label { display: flex; flex-direction: column; gap: 4px; }
-    #settings input {
-      background: #1e1e1e;
-      border: 1px solid #2a2a2a;
-      color: #f0f0f0;
-      font-family: monospace;
-      font-size: 0.95em;
-      padding: 4px 6px;
-      width: 70px;
-    }
-
-    #mode-bar {
-      font-size: 0.75em;
-      color: #333;
+    /* Big metric display */
+    #metric-speed {
+      font-size: 3.5rem;
+      font-weight: 700;
+      color: #4fc3f7;
       text-align: center;
-      padding-top: 4px;
+      line-height: 1;
+    }
+
+    #metric-delta {
+      font-size: 1.1rem;
+      color: #888;
+      text-align: center;
+      margin-top: 6px;
+    }
+
+    #metric-label {
+      font-size: 0.75rem;
+      color: #555;
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    /* Controls */
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: #888;
+      min-width: 110px;
+    }
+
+    input[type="number"] {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #e0e0e0;
+      padding: 6px 10px;
+      font-size: 0.9rem;
+      width: 90px;
+    }
+
+    button {
+      background: #4fc3f7;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 22px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    button:hover  { background: #81d4fa; }
+    button:active { background: #29b6f6; }
+
+    button.danger {
+      background: #ef5350;
+      color: #fff;
+    }
+    button.danger:hover { background: #e57373; }
+
+    /* Cycle log table */
+    #cycle-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    #cycle-table th {
+      color: #555;
+      text-align: left;
+      padding: 4px 8px;
+      border-bottom: 1px solid #2a2a2a;
+      font-weight: 400;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+    }
+
+    #cycle-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #1e1e1e;
+      color: #ccc;
+    }
+
+    #cycle-table tr:last-child td { border-bottom: none; }
+
+    /* Debug bar */
+    #debug-bar {
+      font-size: 0.72rem;
+      color: #444;
+      text-align: center;
+      margin-top: 4px;
+      min-height: 1em;
+    }
+
+    /* Cal progress */
+    #cal-progress {
+      height: 4px;
+      background: #222;
+      border-radius: 2px;
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+    #cal-fill {
+      height: 100%;
+      background: #ffa726;
+      width: 0%;
+      transition: width 0.1s;
+    }
+
+    .empty-log {
+      color: #444;
+      font-size: 0.8rem;
+      text-align: center;
+      padding: 12px 0;
     }
   </style>
 </head>
 <body>
-  <h1>CYLINDER MONITOR</h1>
 
-  <div id="status-bar">
-    <span id="dot">●</span>
-    <span id="status-text">Loading Python...</span>
+  <h1>Cylinder Monitor</h1>
+  <div id="status-bar">Loading Pyodide…</div>
+
+  <!-- Calibration progress -->
+  <div id="cal-progress" style="width:100%;max-width:480px;">
+    <div id="cal-fill"></div>
   </div>
 
-  <div id="big-display">
-    <div id="lbl-last">LAST CYCLE</div>
-    <div id="lbl-time">--:--.---</div>
-    <div id="lbl-speed">— in/sec</div>
+  <!-- Live metric -->
+  <div class="card">
+    <h2>Last Measurement</h2>
+    <div id="metric-speed">—</div>
+    <div id="metric-delta">— ms</div>
+    <div id="metric-label">in/sec &nbsp;|&nbsp; stroke time</div>
+    <div id="debug-bar">baseline: — &nbsp;|&nbsp; threshold: — &nbsp;|&nbsp; hfEnergy: —</div>
   </div>
 
-  <div id="stats-bar">
-    <div class="stat"><div class="stat-label">AVG</div><div class="stat-value" id="s-avg">—</div></div>
-    <div class="stat"><div class="stat-label">BEST</div><div class="stat-value" id="s-best">—</div></div>
-    <div class="stat"><div class="stat-label">WORST</div><div class="stat-value" id="s-worst">—</div></div>
-    <div class="stat"><div class="stat-label">COUNT</div><div class="stat-value" id="s-count">—</div></div>
+  <!-- Controls -->
+  <div class="card">
+    <h2>Settings</h2>
+    <div class="row">
+      <label>Stroke length (in)</label>
+      <input type="number" id="stroke-in" value="1.0" step="0.1" min="0.1" />
+    </div>
+    <div class="row">
+      <label>Multiplier</label>
+      <input type="number" id="multiplier" value="5" step="1" min="1" />
+    </div>
+    <div class="row">
+      <label>HF Floor</label>
+      <input type="number" id="hf-floor" value="0.01" step="0.001" min="0" />
+    </div>
+    <div class="row" style="margin-top:6px; gap:12px;">
+      <button id="btn-start">Start</button>
+      <button id="btn-reset" class="danger">Reset</button>
+    </div>
   </div>
 
-  <div id="lap-header">
-    <span>#</span><span>ms</span><span>in/sec</span><span>time</span>
+  <!-- Cycle log -->
+  <div class="card">
+    <h2>Cycle Log</h2>
+    <table id="cycle-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Time</th>
+          <th>Delta (ms)</th>
+          <th>Speed (in/s)</th>
+        </tr>
+      </thead>
+      <tbody id="cycle-body">
+        <tr><td colspan="4" class="empty-log">No cycles yet</td></tr>
+      </tbody>
+    </table>
   </div>
-  <div id="lap-list"></div>
 
-  <div id="controls">
-    <button id="btn-start" disabled>START</button>
-    <button id="btn-reset">RESET</button>
-  </div>
+<script type="module">
+// ─── Pyodide bootstrap ────────────────────────────────────────────────────────
+const statusBar = document.getElementById('status-bar');
 
-  <div id="settings">
-    <label>Stroke (in)<input id="inp-stroke" type="number" value="1.0" step="0.1"></label>
-    <label>Threshold ×<input id="inp-thresh" type="number" value="30" step="1"></label>
-  </div>
+function setStatus(msg, cls = '') {
+  statusBar.textContent = msg;
+  statusBar.className = cls;
+}
 
-  <div id="mode-bar" id="mode-bar">—</div>
+setStatus('Loading Pyodide…', 'cal');
 
-  <script src="https://cdn.jsdelivr.net/pyodide/v0.27.0/full/pyodide.js"></script>
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service_worker.js");
+// Load Pyodide from CDN
+const pyodide = await loadPyodide({
+  indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.1/full/'
+});
+
+setStatus('Loading numpy…', 'cal');
+await pyodide.loadPackage('numpy');
+
+setStatus('Loading detector…', 'cal');
+const detectorCode = await fetch('detector.py').then(r => r.text());
+await pyodide.runPythonAsync(detectorCode);
+
+setStatus('Ready — press Start', 'ready');
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let audioCtx   = null;
+let processor  = null;
+let running    = false;
+let currentBaseline  = null;
+let currentThreshold = null;
+
+// ─── UI helpers ──────────────────────────────────────────────────────────────
+const calFill     = document.getElementById('cal-fill');
+const metricSpeed = document.getElementById('metric-speed');
+const metricDelta = document.getElementById('metric-delta');
+const debugBar    = document.getElementById('debug-bar');
+const cycleBody   = document.getElementById('cycle-body');
+
+function updateCalUI(pct) {
+  calFill.style.width = pct + '%';
+  setStatus(`Calibrating… ${pct}%`, 'cal');
+}
+
+function onReady() {
+  calFill.style.width = '100%';
+  calFill.style.background = '#66bb6a';
+  setStatus('Listening…', 'ready');
+}
+
+function updateDebug(baseline, hfEnergy) {
+  const thr = baseline ? (baseline * parseFloat(document.getElementById('multiplier').value)).toFixed(5) : '—';
+  const bl  = baseline ? baseline.toFixed(5) : '—';
+  const hf  = hfEnergy !== undefined ? hfEnergy.toFixed(5) : '—';
+  debugBar.textContent = `baseline: ${bl}  |  threshold: ${thr}  |  hfEnergy: ${hf}`;
+}
+
+function addCycleToUI(n, delta_ms, speed, ts) {
+  // Remove empty placeholder
+  const empty = cycleBody.querySelector('.empty-log');
+  if (empty) empty.parentElement.remove();
+
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${n}</td>
+    <td>${ts}</td>
+    <td>${delta_ms.toFixed(2)}</td>
+    <td>${speed.toFixed(3)}</td>
+  `;
+  // Prepend so newest is at top
+  cycleBody.insertBefore(tr, cycleBody.firstChild);
+
+  // Update big metric
+  metricSpeed.textContent = speed.toFixed(2);
+  metricDelta.textContent = delta_ms.toFixed(2) + ' ms';
+  metricSpeed.style.color = '#66bb6a';
+  setTimeout(() => { metricSpeed.style.color = '#4fc3f7'; }, 600);
+}
+
+function updateStatusUI(status) {
+  const labels = {
+    listen:    'Listening…',
+    breakaway: '⚡ Breakaway detected',
+    debounce:  'Debounce…',
+    noise:     'Noise (too short)',
+    timeout:   'Timeout — reset',
+  };
+  if (labels[status]) setStatus(labels[status], status === 'breakaway' ? 'cal' : 'ready');
+}
+
+// ─── Audio pipeline ───────────────────────────────────────────────────────────
+async function startAudio() {
+  audioCtx = new AudioContext({ sampleRate: 48000 });
+  await audioCtx.audioWorklet.addModule('processor.js');
+
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: {
+      echoCancellation: false,
+      noiseSuppression: false,
+      autoGainControl:  false,
+      sampleRate:       48000,
+      channelCount:     2
     }
+  });
 
-    // ── DOM refs ──────────────────────────────────────────────────
-    const dot        = document.getElementById("dot");
-    const statusText = document.getElementById("status-text");
-    const lblTime    = document.getElementById("lbl-time");
-    const lblSpeed   = document.getElementById("lbl-speed");
-    const sAvg       = document.getElementById("s-avg");
-    const sBest      = document.getElementById("s-best");
-    const sWorst     = document.getElementById("s-worst");
-    const sCount     = document.getElementById("s-count");
-    const lapList    = document.getElementById("lap-list");
-    const btnStart   = document.getElementById("btn-start");
-    const btnReset   = document.getElementById("btn-reset");
-    const inpStroke  = document.getElementById("inp-stroke");
-    const inpThresh  = document.getElementById("inp-thresh");
-    const modeBar    = document.getElementById("mode-bar");
+  const source = audioCtx.createMediaStreamSource(stream);
 
-    // ── State ─────────────────────────────────────────────────────
-    let pyodide       = null;
-    let audioCtx      = null;
-    let workletNode   = null;
-    let sourceNode    = null;
-    let running       = false;
-    let cycles        = [];
-
-    // ── Colors ────────────────────────────────────────────────────
-    const CYAN  = "#4fc3f7";
-    const RED   = "#ef5350";
-    const GREEN = "#66bb6a";
-    const AMBER = "#ffb300";
-    const WHITE = "#f0f0f0";
-    const MUTED = "#555555";
-
-    function setStatus(txt, col = MUTED) {
-      statusText.textContent = txt;
-      statusText.style.color = col;
-      dot.style.color = col;
+  processor = new AudioWorkletNode(audioCtx, 'cylinder-processor', {
+    processorOptions: {
+      chunkSamples: 480,
+      sampleRate:   48000,
+      hfBinLow:     10,
+      hfBinHigh:    100,
+      hfFloor:      parseFloat(document.getElementById('hf-floor').value)
     }
+  });
 
-    // ── Load Pyodide + detector.py ────────────────────────────────
-    async function initPython() {
-      setStatus("Loading Python...", AMBER);
-      pyodide = await loadPyodide();
-      await pyodide.loadPackage("numpy");
+  // ── Message handler ──────────────────────────────────────────────────────
+  processor.port.onmessage = async (e) => {
 
-
-      // Fetch and run detector.py
-      const resp = await fetch("detector.py");
-      const code = await resp.text();
-      await pyodide.runPythonAsync(code);
-
-      setStatus("Ready — press START", MUTED);
-      btnStart.disabled = false;
-    }
-
-    // ── Audio setup ───────────────────────────────────────────────
-    async function startAudio() {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl:  false,
-          sampleRate:       48000
-        }
-      });
-
-      audioCtx = new AudioContext({ sampleRate: 48000 });
-      await audioCtx.audioWorklet.addModule("processor.js");
-
-      sourceNode  = audioCtx.createMediaStreamSource(stream);
-      workletNode = new AudioWorkletNode(audioCtx, "cylinder-processor");
-
-      workletNode.port.onmessage = async (e) => {
-        if (!running) return;
-        const chunk = e.data.chunk;
-        await processChunk(chunk);
-      };
-
-      sourceNode.connect(workletNode);
-      workletNode.connect(audioCtx.destination);
-
-      modeBar.textContent = "LIVE MIC — 48kHz";
-    }
-
-    // ── Send chunk to Python ──────────────────────────────────────
-    async function processChunk(chunk) {
-      const arr = pyodide.toPy(Array.from(chunk));
-      const result = await pyodide.runPythonAsync(
-        `process_chunk(${JSON.stringify(Array.from(chunk))})`
-      );
-      const [status, n, delta_ms, speed, ts] = result.toJs();
-      handleStatus(status, n, delta_ms, speed, ts);
-    }
-
-    // ── Handle detection results ──────────────────────────────────
-    function handleStatus(status, n, delta_ms, speed, ts) {
-      if (status && status.startsWith("cal:")) {
-        const pct = status.split(":")[1];
-        setStatus(`Calibrating... ${pct}%`, AMBER);
-      } else if (status === "ready") {
-        setStatus("Ready — listening for breakaway", GREEN);
-      } else if (status === "breakaway") {
-        setStatus("Breakaway detected → waiting for end", CYAN);
-      } else if (status === "cycle") {
-        onCycle(n, delta_ms, speed, ts);
-      } else if (status === "timeout") {
-        setStatus("Timeout — reset", AMBER);
-      } else if (status === "noise") {
-        setStatus("Noise spike ignored", MUTED);
-      }
-    }
-
-    // ── Cycle complete ────────────────────────────────────────────
-    function onCycle(n, delta_ms, speed, ts) {
-      cycles.push({ n, delta_ms, speed, ts });
-
-      const deltas = cycles.map(c => c.delta_ms);
-      const best   = Math.min(...deltas);
-      const worst  = Math.max(...deltas);
-      const avg    = deltas.reduce((a, b) => a + b, 0) / deltas.length;
-
-      const col = cycles.length > 1
-        ? (delta_ms === best ? CYAN : delta_ms === worst ? RED : WHITE)
-        : WHITE;
-
-      // Big display
-      const mins = Math.floor(delta_ms / 60000);
-      const secs = Math.floor((delta_ms % 60000) / 1000);
-      const mil  = Math.floor(delta_ms % 1000);
-      lblTime.textContent  = `${String(mins).padStart(2,"0")}:${String(secs).padStart(2,"0")}.${String(mil).padStart(3,"0")}`;
-      lblTime.style.color  = col;
-      lblSpeed.textContent = `${speed.toFixed(2)} in/sec`;
-      lblSpeed.style.color = col;
-
-      // Stats
-      sAvg.textContent   = `${avg.toFixed(0)}ms`;
-      sBest.textContent  = `${best.toFixed(0)}ms`;
-      sWorst.textContent = `${worst.toFixed(0)}ms`;
-      sCount.textContent = cycles.length;
-
-      // Lap row
-      addLapRow(n, delta_ms, speed, ts, col);
-      setStatus("Cycle complete — listening", GREEN);
-    }
-
-    function addLapRow(n, delta_ms, speed, ts, col) {
-      const row = document.createElement("div");
-      row.className = "lap-row";
-      row.style.color = col;
-      row.innerHTML = `
-        <span>${String(n).padStart(2,"0")}</span>
-        <span>${delta_ms.toFixed(1)}</span>
-        <span>${speed.toFixed(2)}</span>
-        <span style="color:#555">${ts}</span>
-      `;
-      lapList.insertBefore(row, lapList.firstChild);
-    }
-
-    // ── Controls ──────────────────────────────────────────────────
-    btnStart.addEventListener("click", async () => {
-      if (!running) {
-        running = true;
-        btnStart.textContent = "STOP";
-        btnStart.classList.add("stop");
-
-        const stroke = parseFloat(inpStroke.value) || 1.0;
-        const thresh = parseFloat(inpThresh.value) || 30;
-        await pyodide.runPythonAsync(
-          `reset_tracker(stroke_in=${stroke}, multiplier=${thresh})`
+    if (e.data.type === 'rms') {
+      // Feed single RMS value to Pyodide for calibration / adaptive baseline
+      // We pass a flat array of identical values — cal only needs the RMS magnitude
+      try {
+        const samples = new Array(480).fill(e.data.value);
+        const result  = await pyodide.runPythonAsync(
+          `process_chunk([${samples.join(',')}])`
         );
+        const [status] = result.toJs ? result.toJs() : result;
 
-        try {
-          await startAudio();
-          setStatus("Calibrating...", AMBER);
-        } catch (err) {
-          setStatus("Mic error: " + err.message, RED);
-          running = false;
-          btnStart.textContent = "START";
-          btnStart.classList.remove("stop");
+        if (typeof status === 'string' && status.startsWith('cal:')) {
+          const pct = parseInt(status.split(':')[1]);
+          updateCalUI(pct);
+        } else if (status === 'ready') {
+          onReady();
+          // Get initial baseline and push threshold to worklet
+          currentBaseline = await pyodide.runPythonAsync('get_baseline()');
+          currentThreshold = currentBaseline * parseFloat(document.getElementById('multiplier').value);
+          processor.port.postMessage({ type: 'set_threshold', value: currentThreshold });
+          updateDebug(currentBaseline, undefined);
         }
-      } else {
-        running = false;
-        btnStart.textContent = "START";
-        btnStart.classList.remove("stop");
-        if (audioCtx) { audioCtx.close(); audioCtx = null; }
-        setStatus("Stopped", MUTED);
-        modeBar.textContent = "—";
+      } catch (err) {
+        console.warn('rms handler error:', err);
       }
-    });
+    }
 
-    btnReset.addEventListener("click", async () => {
-      running = false;
-      btnStart.textContent = "START";
-      btnStart.classList.remove("stop");
-      if (audioCtx) { audioCtx.close(); audioCtx = null; }
-      cycles = [];
-      lblTime.textContent  = "--:--.---";
-      lblTime.style.color  = WHITE;
-      lblSpeed.textContent = "— in/sec";
-      lblSpeed.style.color = CYAN;
-      sAvg.textContent = sBest.textContent = sWorst.textContent = sCount.textContent = "—";
-      lapList.innerHTML = "";
-      modeBar.textContent = "—";
-      await pyodide.runPythonAsync("reset_tracker()");
-      setStatus("Reset — press START", MUTED);
-    });
+    if (e.data.type === 'gated') {
+      // FFT gate fired — chunk was loud but low-frequency, discarded
+      console.debug('gated chunk — rms:', e.data.rms.toFixed(5), 'hfEnergy:', e.data.hfEnergy.toFixed(5));
+      updateDebug(currentBaseline, e.data.hfEnergy);
+    }
 
-    // ── Boot ──────────────────────────────────────────────────────
-    initPython();
-  </script>
+    if (e.data.type === 'spike') {
+      // Passed RMS threshold AND FFT gate — send to Pyodide for cycle logic
+      try {
+        const samples = new Array(480).fill(e.data.rms);
+        const result  = await pyodide.runPythonAsync(
+          `process_chunk([${samples.join(',')}])`
+        );
+        const arr = result.toJs ? result.toJs() : result;
+        const [status, n, delta_ms, speed, ts] = arr;
+
+        updateDebug(currentBaseline, e.data.hfEnergy);
+
+        if (status === 'cycle') {
+          addCycleToUI(n, delta_ms, speed, ts);
+        } else {
+          updateStatusUI(status);
+        }
+
+        // Refresh adaptive baseline and push updated threshold to worklet
+        currentBaseline  = await pyodide.runPythonAsync('get_baseline()');
+        if (currentBaseline) {
+          currentThreshold = currentBaseline * parseFloat(document.getElementById('multiplier').value);
+          processor.port.postMessage({ type: 'set_threshold', value: currentThreshold });
+        }
+      } catch (err) {
+        console.warn('spike handler error:', err);
+      }
+    }
+  };
+
+  source.connect(processor);
+  processor.connect(audioCtx.destination);
+}
+
+// ─── Button handlers ──────────────────────────────────────────────────────────
+document.getElementById('btn-start').addEventListener('click', async () => {
+  if (running) return;
+  running = true;
+  document.getElementById('btn-start').disabled = true;
+
+  // Apply settings to Pyodide tracker
+  const strokeIn   = parseFloat(document.getElementById('stroke-in').value)   || 1.0;
+  const multiplier = parseFloat(document.getElementById('multiplier').value)   || 5;
+  await pyodide.runPythonAsync(`reset_tracker(stroke_in=${strokeIn}, multiplier=${multiplier})`);
+
+  // Reset cal bar
+  calFill.style.background = '#ffa726';
+  calFill.style.width = '0%';
+
+  setStatus('Starting mic…', 'cal');
+  try {
+    await startAudio();
+  } catch (err) {
+    setStatus('Mic error: ' + err.message, 'error');
+    running = false;
+    document.getElementById('btn-start').disabled = false;
+  }
+});
+
+document.getElementById('btn-reset').addEventListener('click', async () => {
+  if (audioCtx) {
+    await audioCtx.close();
+    audioCtx  = null;
+    processor = null;
+  }
+  running = false;
+  document.getElementById('btn-start').disabled = false;
+
+  const strokeIn   = parseFloat(document.getElementById('stroke-in').value)   || 1.0;
+  const multiplier = parseFloat(document.getElementById('multiplier').value)   || 5;
+  await pyodide.runPythonAsync(`reset_tracker(stroke_in=${strokeIn}, multiplier=${multiplier})`);
+
+  calFill.style.width = '0%';
+  calFill.style.background = '#ffa726';
+  metricSpeed.textContent = '—';
+  metricDelta.textContent = '— ms';
+  metricSpeed.style.color = '#4fc3f7';
+  cycleBody.innerHTML = '<tr><td colspan="4" class="empty-log">No cycles yet</td></tr>';
+  debugBar.textContent = 'baseline: — | threshold: — | hfEnergy: —';
+  setStatus('Ready — press Start', 'ready');
+});
+
+// ─── Service worker registration ──────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service_worker.js').catch(console.warn);
+}
+</script>
+
+<!-- Pyodide loader — must be in <body> after <script type="module"> reference -->
+<script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+
 </body>
 </html>
