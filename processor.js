@@ -1,15 +1,7 @@
-// processor.js — AudioWorkletProcessor
-// v5: ring buffer in worklet, RMS sent every chunk for cal/baseline,
-//     spike fired on hard hit only — lookback handled in detector.py
-//     debounce synced from main thread via set_debounce message
-//
-// Pipeline per 10ms chunk:
-//   1. Compute additive combined signal (|ch0| + |ch1|)
-//   2. Compute RMS — always sent to main thread (cal + adaptive baseline)
-//   3. Store (rms, timestamp) in ring buffer
-//   4. FFT gate — if HF energy below hfFloor, discard
-//   5. If RMS >= impact threshold AND passed FFT gate — fire spike
-//      Main thread passes spike + ring buffer snapshot to Pyodide for lookback
+// processor.js — AudioWorkletProcessor v5
+// Additive combined signal, ring buffer, FFT gate, spike-only Pyodide calls.
+// Debounce synced from main thread via set_debounce message.
+// Snapshot mode: on-demand RMS+HF capture for calibration tab keypress events.
 
 class CylinderProcessor extends AudioWorkletProcessor {
   constructor(options) {
@@ -19,29 +11,37 @@ class CylinderProcessor extends AudioWorkletProcessor {
     this.sampleRate    = options.processorOptions?.sampleRate   ?? 48000;
     this.buffer        = [];
 
-    // Detection state
-    this.threshold     = null;   // impact threshold — set from main thread after cal
+    this.threshold     = null;
     this.debounceMs    = options.processorOptions?.debounceMs ?? 50;
     this.lastSpikeTime = -Infinity;
 
-    // FFT gate
     this.hfBinLow  = options.processorOptions?.hfBinLow  ?? 10;
     this.hfBinHigh = options.processorOptions?.hfBinHigh ?? 100;
     this.hfFloor   = options.processorOptions?.hfFloor   ?? 0.01;
 
-    // Ring buffer — stores {rms, t} for last ~250ms of chunks
-    // 250ms / 10ms = 25 slots
     this.ringSize   = 25;
     this.ringBuffer = [];
+
+    // Latest chunk values — used for snapshot requests from calibration tab
+    this.lastRms      = 0;
+    this.lastHfEnergy = 0;
 
     this.port.onmessage = (e) => {
       if (e.data.type === 'set_threshold')  this.threshold  = e.data.value;
       if (e.data.type === 'set_debounce')   this.debounceMs = e.data.value;
       if (e.data.type === 'set_hf_floor')   this.hfFloor    = e.data.value;
+      if (e.data.type === 'snapshot') {
+        // Calibration tab requested current RMS + HF — reply immediately
+        this.port.postMessage({
+          type:      'snapshot',
+          rms:       this.lastRms,
+          hfEnergy:  this.lastHfEnergy,
+          timestamp: currentTime * 1000,
+        });
+      }
     };
   }
 
-  // Real-valued DFT — sufficient for 480-sample chunks
   _computeFFTMagnitudes(chunk) {
     const N    = chunk.length;
     const half = Math.floor(N / 2);
@@ -79,36 +79,31 @@ class CylinderProcessor extends AudioWorkletProcessor {
     while (this.buffer.length >= this.chunkSamples) {
       const chunk = this.buffer.splice(0, this.chunkSamples);
 
-      // RMS
       let sumSq = 0;
       for (let i = 0; i < chunk.length; i++) sumSq += chunk[i] * chunk[i];
-      const rms = Math.sqrt(sumSq / chunk.length);
+      const rms   = Math.sqrt(sumSq / chunk.length);
       const nowMs = currentTime * 1000;
 
-      // Always push to ring buffer
+      // Compute HF for every chunk so snapshot always has fresh values
+      const mags     = this._computeFFTMagnitudes(chunk);
+      const hfEnergy = this._hfEnergy(mags);
+
+      this.lastRms      = rms;
+      this.lastHfEnergy = hfEnergy;
+
       this.ringBuffer.push({ rms, t: nowMs });
       if (this.ringBuffer.length > this.ringSize) this.ringBuffer.shift();
 
-      // Always send RMS to main thread for cal / adaptive baseline
       this.port.postMessage({ type: 'rms', value: rms });
 
-      // Impact detection
       if (this.threshold !== null && rms >= this.threshold) {
-
-        // FFT gate
-        const mags     = this._computeFFTMagnitudes(chunk);
-        const hfEnergy = this._hfEnergy(mags);
-
         if (hfEnergy < this.hfFloor) {
           this.port.postMessage({ type: 'gated', rms, hfEnergy });
           continue;
         }
-
-        // Debounce
         if (nowMs - this.lastSpikeTime < this.debounceMs) continue;
         this.lastSpikeTime = nowMs;
 
-        // Fire spike — include snapshot of ring buffer for lookback in Python
         this.port.postMessage({
           type:       'spike',
           rms,

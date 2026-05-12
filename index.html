@@ -13,28 +13,53 @@
       font-family: 'Segoe UI', sans-serif;
       min-height: 100vh; display: flex; flex-direction: column;
       align-items: center;
-      padding-top: 70px; padding-bottom: 24px; padding-left: 16px; padding-right: 16px;
+      padding-top: 80px; padding-bottom: 24px; padding-left: 16px; padding-right: 16px;
     }
+
+    /* ── Fixed header ── */
     #fixed-header {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       background: #0a0a0a; border-bottom: 1px solid #1e1e1e;
       display: flex; flex-direction: column; align-items: center;
-      padding: 10px 16px 8px;
+      padding: 8px 16px 0;
     }
-    h1 { color: #4fc3f7; font-size: 1.4rem; letter-spacing: 0.05em; }
-    #status-bar { font-size: 0.85rem; color: #888; min-height: 1.2em; margin-top: 2px; }
+    h1 { color: #4fc3f7; font-size: 1.4rem; letter-spacing: 0.05em; margin-bottom: 6px; }
+    #status-bar { font-size: 0.85rem; color: #888; min-height: 1.2em; margin-bottom: 6px; }
     #status-bar.ready { color: #66bb6a; }
     #status-bar.error { color: #ef5350; }
     #status-bar.cal   { color: #ffa726; }
+
+    /* ── Tabs ── */
+    #tab-bar {
+      display: flex; gap: 0; width: 100%; max-width: 480px;
+      border-bottom: 2px solid #1e1e1e;
+    }
+    .tab-btn {
+      flex: 1; padding: 7px 0; font-size: 0.82rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      background: none; border: none; color: #555; cursor: pointer;
+      border-bottom: 2px solid transparent; margin-bottom: -2px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab-btn.active { color: #4fc3f7; border-bottom-color: #4fc3f7; }
+    .tab-btn:hover:not(.active) { color: #888; }
+
+    /* ── Tab panels ── */
+    .tab-panel { display: none; width: 100%; max-width: 480px; }
+    .tab-panel.active { display: block; }
+
+    /* ── Cards ── */
     .card {
       background: #1a1a1a; border: 1px solid #2a2a2a;
       border-radius: 10px; padding: 20px;
-      width: 100%; max-width: 480px; margin-bottom: 16px;
+      width: 100%; margin-bottom: 16px;
     }
     .card h2 {
       font-size: 0.8rem; text-transform: uppercase;
       letter-spacing: 0.1em; color: #555; margin-bottom: 14px;
     }
+
+    /* ── Measure tab ── */
     #metric-speed { font-size: 3.5rem; font-weight: 700; color: #4fc3f7; text-align: center; line-height: 1; }
     #metric-delta { font-size: 1.1rem; color: #888; text-align: center; margin-top: 6px; }
     #metric-label { font-size: 0.75rem; color: #555; text-align: center; margin-top: 4px; }
@@ -58,7 +83,71 @@
     td.unmatched { color: #ef5350; }
     td.confirmed { color: #66bb6a; }
 
-    /* Settings */
+    /* ── Calibration tab ── */
+    #cal-tab-hint {
+      font-size: 0.82rem; color: #666; text-align: center;
+      padding: 10px 0 4px; line-height: 1.5;
+    }
+    #cal-tab-hint span { color: #4fc3f7; font-weight: 600; }
+    #cal-key-display {
+      font-size: 2.2rem; font-weight: 700; color: #ffa726;
+      text-align: center; margin: 8px 0 4px; min-height: 2.6rem;
+    }
+
+    /* Stats summary */
+    #cal-stats-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 10px; margin-bottom: 4px;
+    }
+    .stat-box {
+      background: #111; border: 1px solid #2a2a2a; border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .stat-box .stat-label {
+      font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em;
+      color: #555; margin-bottom: 4px;
+    }
+    .stat-box .stat-value {
+      font-size: 1.3rem; font-weight: 700; color: #4fc3f7;
+    }
+    .stat-box .stat-sub {
+      font-size: 0.72rem; color: #666; margin-top: 2px;
+    }
+    .stat-box.highlight .stat-value { color: #66bb6a; }
+    .stat-box.warn .stat-value      { color: #ffa726; }
+
+    /* Suggested settings */
+    #cal-suggest {
+      background: #111; border: 1px solid #2a2a2a; border-radius: 8px;
+      padding: 12px; margin-bottom: 4px; font-size: 0.82rem;
+    }
+    #cal-suggest .suggest-title {
+      font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em;
+      color: #555; margin-bottom: 8px;
+    }
+    .suggest-row {
+      display: flex; justify-content: space-between;
+      padding: 4px 0; border-bottom: 1px solid #1e1e1e;
+      color: #ccc;
+    }
+    .suggest-row:last-child { border-bottom: none; }
+    .suggest-row .sval { color: #66bb6a; font-weight: 600; }
+
+    /* Event log table */
+    #cal-event-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    #cal-event-table th {
+      color: #555; text-align: left; padding: 4px 6px;
+      border-bottom: 1px solid #2a2a2a; font-weight: 400;
+      text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.08em;
+    }
+    #cal-event-table td { padding: 5px 6px; border-bottom: 1px solid #1e1e1e; color: #ccc; }
+    #cal-event-table tr:last-child td { border-bottom: none; }
+    #cal-event-table tr.run-divider td {
+      border-top: 2px solid #2a2a2a; color: #555;
+      font-size: 0.7rem; padding-top: 8px;
+    }
+
+    /* ── Settings (shared) ── */
     .row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
     label { font-size: 0.8rem; color: #888; min-width: 150px; }
     input[type="number"] {
@@ -77,10 +166,13 @@
     button:active { background: #29b6f6; }
     button.danger       { background: #ef5350; color: #fff; }
     button.danger:hover { background: #e57373; }
+    button.secondary       { background: #2a2a2a; color: #ccc; }
+    button.secondary:hover { background: #333; }
     .section-label {
       font-size: 0.75rem; color: #555; text-transform: uppercase;
       letter-spacing: 0.08em; margin-top: 10px; margin-bottom: 4px;
     }
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
   </style>
 </head>
 <body>
@@ -88,94 +180,224 @@
   <div id="fixed-header">
     <h1>Cylinder Monitor</h1>
     <div id="status-bar">Loading Pyodide…</div>
-  </div>
-
-  <!-- Last Measurement -->
-  <div class="card">
-    <h2>Last Measurement</h2>
-    <div id="cal-progress"><div id="cal-fill"></div></div>
-    <div id="metric-speed">—</div>
-    <div id="metric-delta">— ms</div>
-    <div id="metric-label">in/sec &nbsp;|&nbsp; stroke time</div>
-    <div id="debug-bar">baseline: — | threshold: — | hfEnergy: —</div>
-  </div>
-
-  <!-- Cycle Log -->
-  <div class="card">
-    <h2>Cycle Log</h2>
-    <table id="cycle-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Time</th>
-          <th>Delta (ms)</th>
-          <th>Speed (in/s)</th>
-          <th>Status</th>
-          <th class="col-rms">T_start RMS×</th>
-          <th class="col-rms">T_end RMS×</th>
-          <th class="col-hf">HF×</th>
-        </tr>
-      </thead>
-      <tbody id="cycle-body">
-        <tr><td colspan="8" class="empty-log">No cycles yet</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Settings -->
-  <div class="card">
-    <h2>Settings</h2>
-
-    <div class="section-label">Detection</div>
-    <div class="row">
-      <label>Stroke length (in)</label>
-      <input type="number" id="stroke-in" value="1.0" step="0.1" min="0.1" />
-    </div>
-    <div class="row">
-      <label>Impact multiplier</label>
-      <input type="number" id="impact-mult" value="5" step="1" min="1" />
-    </div>
-    <div class="row">
-      <label>Breakaway multiplier</label>
-      <input type="number" id="breakaway-mult" value="3" step="0.5" min="0.5" />
-    </div>
-    <div class="row">
-      <label>HF Floor</label>
-      <input type="number" id="hf-floor" value="0.01" step="0.001" min="0" />
-    </div>
-    <div class="row">
-      <label>Debounce (ms)</label>
-      <input type="number" id="debounce-ms" value="50" step="5" min="0" />
-    </div>
-
-    <div class="section-label">Lookback Window</div>
-    <div class="row">
-      <label>Min lookback (ms)</label>
-      <input type="number" id="min-lookback" value="15" step="5" min="5" />
-    </div>
-    <div class="row">
-      <label>Max lookback (ms)</label>
-      <input type="number" id="max-lookback" value="100" step="10" min="10" />
-    </div>
-
-    <div class="section-label">Cycle Log Debug Columns</div>
-    <div class="check-row">
-      <input type="checkbox" id="chk-rms" />
-      <label for="chk-rms">Show RMS Ratios (T_start × / T_end ×)</label>
-    </div>
-    <div class="check-row">
-      <input type="checkbox" id="chk-hf" />
-      <label for="chk-hf">Show HF Ratio</label>
-    </div>
-
-    <div class="row" style="margin-top:14px;">
-      <button id="btn-start">Start</button>
-      <button id="btn-reset" class="danger">Reset</button>
+    <div id="tab-bar">
+      <button class="tab-btn active" data-tab="measure">Measure</button>
+      <button class="tab-btn"        data-tab="calibrate">Calibrate</button>
+      <button class="tab-btn"        data-tab="settings">Settings</button>
     </div>
   </div>
+
+  <!-- ═══════════════════════════════════════════════════════ MEASURE TAB -->
+  <div class="tab-panel active" id="tab-measure">
+
+    <div class="card">
+      <h2>Last Measurement</h2>
+      <div id="cal-progress"><div id="cal-fill"></div></div>
+      <div id="metric-speed">—</div>
+      <div id="metric-delta">— ms</div>
+      <div id="metric-label">in/sec &nbsp;|&nbsp; stroke time</div>
+      <div id="debug-bar">baseline: — | threshold: — | hfEnergy: —</div>
+    </div>
+
+    <div class="card">
+      <h2>Cycle Log</h2>
+      <table id="cycle-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Time</th>
+            <th>Delta (ms)</th>
+            <th>Speed (in/s)</th>
+            <th>Status</th>
+            <th class="col-rms">T_start ×</th>
+            <th class="col-rms">T_end ×</th>
+            <th class="col-hf">HF×</th>
+          </tr>
+        </thead>
+        <tbody id="cycle-body">
+          <tr><td colspan="8" class="empty-log">No cycles yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="btn-row">
+        <button id="btn-start">Start</button>
+        <button id="btn-reset" class="danger">Reset</button>
+      </div>
+    </div>
+
+  </div><!-- /tab-measure -->
+
+  <!-- ══════════════════════════════════════════════════════ CALIBRATE TAB -->
+  <div class="tab-panel" id="tab-calibrate">
+
+    <div class="card">
+      <h2>Key Tap Calibration</h2>
+      <div id="cal-tab-hint">
+        Press <span>` (backtick)</span> to capture an event.<br>
+        Each press records RMS and HF energy at that instant.<br>
+        Use multiple runs to characterize your signal.
+      </div>
+      <div id="cal-key-display">—</div>
+    </div>
+
+    <!-- Stats summary -->
+    <div class="card">
+      <h2>Statistics</h2>
+      <div id="cal-stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Events captured</div>
+          <div class="stat-value" id="stat-count">0</div>
+          <div class="stat-sub" id="stat-runs">0 runs</div>
+        </div>
+        <div class="stat-box highlight">
+          <div class="stat-label">Baseline RMS</div>
+          <div class="stat-value" id="stat-baseline">—</div>
+          <div class="stat-sub">current adaptive</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Mean RMS</div>
+          <div class="stat-value" id="stat-rms-mean">—</div>
+          <div class="stat-sub" id="stat-rms-range">range: —</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">RMS Std Dev</div>
+          <div class="stat-value" id="stat-rms-sd">—</div>
+          <div class="stat-sub" id="stat-rms-cv">CV: —</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Mean HF Energy</div>
+          <div class="stat-value" id="stat-hf-mean">—</div>
+          <div class="stat-sub" id="stat-hf-range">range: —</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">HF Std Dev</div>
+          <div class="stat-value" id="stat-hf-sd">—</div>
+          <div class="stat-sub" id="stat-hf-cv">CV: —</div>
+        </div>
+        <div class="stat-box warn">
+          <div class="stat-label">Mean RMS × baseline</div>
+          <div class="stat-value" id="stat-rms-mult">—</div>
+          <div class="stat-sub">signal-to-baseline ratio</div>
+        </div>
+        <div class="stat-box warn">
+          <div class="stat-label">Min RMS × baseline</div>
+          <div class="stat-value" id="stat-rms-mult-min">—</div>
+          <div class="stat-sub">worst-case event</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Suggested settings -->
+    <div class="card">
+      <h2>Suggested Settings</h2>
+      <div id="cal-suggest">
+        <div class="suggest-title">Based on captured events vs. current baseline</div>
+        <div class="suggest-row">
+          <span>Impact multiplier</span>
+          <span class="sval" id="sug-impact">—</span>
+        </div>
+        <div class="suggest-row">
+          <span>Breakaway multiplier</span>
+          <span class="sval" id="sug-breakaway">—</span>
+        </div>
+        <div class="suggest-row">
+          <span>HF Floor</span>
+          <span class="sval" id="sug-hf">—</span>
+        </div>
+        <div class="suggest-row">
+          <span>Margin used</span>
+          <span class="sval" id="sug-margin">—</span>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button id="btn-apply-suggest">Apply to Settings</button>
+      </div>
+    </div>
+
+    <!-- Event log -->
+    <div class="card">
+      <h2>Event Log</h2>
+      <table id="cal-event-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Run</th>
+            <th>Time</th>
+            <th>RMS</th>
+            <th>RMS×</th>
+            <th>HF Energy</th>
+            <th>HF×</th>
+          </tr>
+        </thead>
+        <tbody id="cal-event-body">
+          <tr><td colspan="7" class="empty-log">No events yet — press ` to capture</td></tr>
+        </tbody>
+      </table>
+      <div class="btn-row" style="margin-top:14px;">
+        <button id="btn-cal-new-run" class="secondary">New Run</button>
+        <button id="btn-cal-clear" class="danger">Clear All</button>
+      </div>
+    </div>
+
+  </div><!-- /tab-calibrate -->
+
+  <!-- ══════════════════════════════════════════════════════ SETTINGS TAB -->
+  <div class="tab-panel" id="tab-settings">
+
+    <div class="card">
+      <h2>Settings</h2>
+
+      <div class="section-label">Detection</div>
+      <div class="row">
+        <label>Stroke length (in)</label>
+        <input type="number" id="stroke-in" value="1.0" step="0.1" min="0.1" />
+      </div>
+      <div class="row">
+        <label>Impact multiplier</label>
+        <input type="number" id="impact-mult" value="5" step="1" min="1" />
+      </div>
+      <div class="row">
+        <label>Breakaway multiplier</label>
+        <input type="number" id="breakaway-mult" value="3" step="0.5" min="0.5" />
+      </div>
+      <div class="row">
+        <label>HF Floor</label>
+        <input type="number" id="hf-floor" value="0.01" step="0.001" min="0" />
+      </div>
+      <div class="row">
+        <label>Debounce (ms)</label>
+        <input type="number" id="debounce-ms" value="50" step="5" min="0" />
+      </div>
+
+      <div class="section-label">Lookback Window</div>
+      <div class="row">
+        <label>Min lookback (ms)</label>
+        <input type="number" id="min-lookback" value="15" step="5" min="5" />
+      </div>
+      <div class="row">
+        <label>Max lookback (ms)</label>
+        <input type="number" id="max-lookback" value="100" step="10" min="10" />
+      </div>
+
+      <div class="section-label">Cycle Log Debug Columns</div>
+      <div class="check-row">
+        <input type="checkbox" id="chk-rms" />
+        <label for="chk-rms">Show RMS Ratios (T_start × / T_end ×)</label>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="chk-hf" />
+        <label for="chk-hf">Show HF Ratio</label>
+      </div>
+    </div>
+
+  </div><!-- /tab-settings -->
 
   <script type="module">
     (async () => {
+
+      // ── DOM refs ──────────────────────────────────────────────────────────
       const statusBar   = document.getElementById('status-bar');
       const calFill     = document.getElementById('cal-fill');
       const metricSpeed = document.getElementById('metric-speed');
@@ -183,11 +405,23 @@
       const debugBar    = document.getElementById('debug-bar');
       const cycleBody   = document.getElementById('cycle-body');
 
+      // ── Tab switching ─────────────────────────────────────────────────────
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+        });
+      });
+
+      // ── Debug column toggles ──────────────────────────────────────────────
       document.getElementById('chk-rms').addEventListener('change', e =>
         document.body.classList.toggle('show-rms', e.target.checked));
       document.getElementById('chk-hf').addEventListener('change', e =>
         document.body.classList.toggle('show-hf', e.target.checked));
 
+      // ── Helpers ───────────────────────────────────────────────────────────
       function setStatus(msg, cls = '') {
         statusBar.textContent = msg; statusBar.className = cls;
       }
@@ -197,7 +431,144 @@
         const hf  = hfEnergy  != null ? hfEnergy.toFixed(5)  : '—';
         debugBar.textContent = `baseline: ${bl} | threshold: ${thr} | hfEnergy: ${hf}`;
       }
+      const g = id => parseFloat(document.getElementById(id).value);
+      function getSettings() {
+        return {
+          strokeIn:      g('stroke-in')      || 1.0,
+          impactMult:    g('impact-mult')     || 5,
+          breakawayMult: g('breakaway-mult')  || 3,
+          hfFloor:       g('hf-floor'),
+          debounceMs:    g('debounce-ms')     || 50,
+          minLookback:   g('min-lookback')    || 15,
+          maxLookback:   g('max-lookback')    || 100,
+        };
+      }
 
+      // ── Pyodide init ──────────────────────────────────────────────────────
+      setStatus('Loading Pyodide…', 'cal');
+      const pyodide = await loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.1/full/' });
+      setStatus('Loading numpy…', 'cal');
+      await pyodide.loadPackage('numpy');
+      setStatus('Loading detector…', 'cal');
+      const detectorCode = await fetch('detector.py').then(r => r.text());
+      await pyodide.runPythonAsync(detectorCode);
+      setStatus('Ready — press Start', 'ready');
+
+      // ── Shared audio state ────────────────────────────────────────────────
+      let audioCtx = null, processor = null;
+      let running = false, calDone = false;
+      let currentBaseline = null, currentThreshold = null;
+
+      // ── Audio pipeline ────────────────────────────────────────────────────
+      async function startAudio() {
+        const s = getSettings();
+        audioCtx = new AudioContext({ sampleRate: 48000 });
+        if (audioCtx.state === 'suspended') await audioCtx.resume();
+        await audioCtx.audioWorklet.addModule('processor.js');
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: false, noiseSuppression: false,
+            autoGainControl: false, channelCount: 2
+          }
+        });
+
+        const source = audioCtx.createMediaStreamSource(stream);
+        processor = new AudioWorkletNode(audioCtx, 'cylinder-processor', {
+          processorOptions: {
+            chunkSamples: 480, sampleRate: 48000,
+            hfBinLow: 10, hfBinHigh: 100,
+            hfFloor: s.hfFloor,
+            debounceMs: s.debounceMs
+          }
+        });
+
+        processor.port.onmessage = async (e) => {
+
+          // ── Calibration RMS ─────────────────────────────────────────────
+          if (e.data.type === 'rms') {
+            if (calDone) return;
+            try {
+              const result = await pyodide.runPythonAsync(
+                `process_chunk(${e.data.value}, ${audioCtx.currentTime})`
+              );
+              const arr    = result.toJs ? result.toJs() : Array.from(result);
+              const status = arr[0];
+              if (typeof status === 'string' && status.startsWith('cal:')) {
+                const pct = parseInt(status.split(':')[1]);
+                calFill.style.width = pct + '%';
+                setStatus(`Calibrating… ${pct}%`, 'cal');
+              } else if (status === 'ready') {
+                calDone = true;
+                calFill.style.width = '100%';
+                calFill.style.background = '#66bb6a';
+                setStatus('Listening…', 'ready');
+                currentBaseline  = await pyodide.runPythonAsync('get_baseline()');
+                currentThreshold = currentBaseline * s.impactMult;
+                processor.port.postMessage({ type: 'set_threshold', value: currentThreshold });
+                updateDebug(currentBaseline, currentThreshold, null);
+                // Update calibration tab baseline display
+                document.getElementById('stat-baseline').textContent =
+                  currentBaseline.toFixed(5);
+              }
+            } catch (err) { console.warn('rms error:', err); }
+          }
+
+          // ── Gated ───────────────────────────────────────────────────────
+          if (e.data.type === 'gated') {
+            console.debug('GATED rms:', e.data.rms.toFixed(5), 'hf:', e.data.hfEnergy.toFixed(5));
+            updateDebug(currentBaseline, currentThreshold, e.data.hfEnergy);
+          }
+
+          // ── Spike ───────────────────────────────────────────────────────
+          if (e.data.type === 'spike') {
+            console.log('SPIKE rms:', e.data.rms.toFixed(5), 'hf:', e.data.hfEnergy.toFixed(5));
+            updateDebug(currentBaseline, currentThreshold, e.data.hfEnergy);
+            try {
+              const ts = e.data.timestamp / 1000;
+              pyodide.globals.set('_ring_js', e.data.ringBuffer);
+              await pyodide.runPythonAsync(`
+tracker.ring_buffer.clear()
+for _rms, _t in _ring_js:
+    tracker.ring_buffer.append((_rms, _t / 1000))
+`);
+              const result = await pyodide.runPythonAsync(
+                `process_chunk(${e.data.rms}, ${ts})`
+              );
+              const arr = result.toJs ? result.toJs() : Array.from(result);
+              const [status, n, delta_ms, speed, logTs, tend_rms, tstart_rms] = arr;
+              console.log('status:', status, 'delta_ms:', delta_ms, 'speed:', speed);
+
+              if (status === 'cycle' || status === 'unmatched') {
+                addCycleToUI(n, delta_ms, speed, logTs, status,
+                             tend_rms, tstart_rms, e.data.hfEnergy, currentThreshold);
+              } else {
+                const labels = { listen: 'Listening…', debounce: 'Debounce…', noise: 'Noise' };
+                setStatus(labels[status] || status, 'ready');
+              }
+
+              currentBaseline = await pyodide.runPythonAsync('get_baseline()');
+              if (currentBaseline) {
+                const s2 = getSettings();
+                currentThreshold = currentBaseline * s2.impactMult;
+                processor.port.postMessage({ type: 'set_threshold', value: currentThreshold });
+                document.getElementById('stat-baseline').textContent =
+                  currentBaseline.toFixed(5);
+              }
+            } catch (err) { console.warn('spike error:', err); }
+          }
+
+          // ── Snapshot (calibration tab keypress) ─────────────────────────
+          if (e.data.type === 'snapshot') {
+            handleCalSnapshot(e.data.rms, e.data.hfEnergy);
+          }
+        };
+
+        source.connect(processor);
+        processor.connect(audioCtx.destination);
+      }
+
+      // ── Measure tab UI ────────────────────────────────────────────────────
       function addCycleToUI(n, delta_ms, speed, ts, status, tend_rms, tstart_rms, hfEnergy, threshold) {
         const empty = cycleBody.querySelector('.empty-log');
         if (empty) empty.parentElement.remove();
@@ -207,7 +578,6 @@
         const deltaCell   = delta_ms != null ? parseFloat(delta_ms).toFixed(2) : '—';
         const speedCell   = speed    != null ? parseFloat(speed).toFixed(3)    : '—';
 
-        // Ratios relative to impact threshold
         const tStartRatio = (tstart_rms != null && threshold) ? (tstart_rms / threshold).toFixed(2) + '×' : '—';
         const tEndRatio   = (tend_rms   != null && threshold) ? (tend_rms   / threshold).toFixed(2) + '×' : '—';
         const hfRatio     = (hfEnergy   != null && threshold) ? (hfEnergy   / threshold).toFixed(2) + '×' : '—';
@@ -232,138 +602,165 @@
         }
       }
 
-      // ── Pyodide init ─────────────────────────────────────────────────────
-      setStatus('Loading Pyodide…', 'cal');
-      const pyodide = await loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.1/full/' });
-      setStatus('Loading numpy…', 'cal');
-      await pyodide.loadPackage('numpy');
-      setStatus('Loading detector…', 'cal');
-      const detectorCode = await fetch('detector.py').then(r => r.text());
-      await pyodide.runPythonAsync(detectorCode);
-      setStatus('Ready — press Start', 'ready');
+      // ── Calibration tab state ─────────────────────────────────────────────
+      let calEvents  = [];   // { rms, hfEnergy, ts, run }
+      let calRun     = 1;
 
-      // ── State ─────────────────────────────────────────────────────────────
-      let audioCtx = null, processor = null;
-      let running = false, calDone = false;
-      let currentBaseline = null, currentThreshold = null;
+      function handleCalSnapshot(rms, hfEnergy) {
+        if (!calDone) {
+          setStatus('Calibrate after mic is ready (green bar)', 'error');
+          setTimeout(() => setStatus('Listening…', 'ready'), 2000);
+          return;
+        }
 
-      // ── Settings helpers ──────────────────────────────────────────────────
-      const g = id => parseFloat(document.getElementById(id).value);
-      function getSettings() {
-        return {
-          strokeIn:      g('stroke-in')      || 1.0,
-          impactMult:    g('impact-mult')     || 5,
-          breakawayMult: g('breakaway-mult')  || 3,
-          hfFloor:       g('hf-floor'),
-          debounceMs:    g('debounce-ms')     || 50,
-          minLookback:   g('min-lookback')    || 15,
-          maxLookback:   g('max-lookback')    || 100,
-        };
+        const ts  = new Date().toLocaleTimeString();
+        const evt = { rms, hfEnergy, ts, run: calRun };
+        calEvents.push(evt);
+
+        // Flash key display
+        const kd = document.getElementById('cal-key-display');
+        kd.textContent = `RMS ${rms.toFixed(5)}`;
+        kd.style.color = '#66bb6a';
+        setTimeout(() => { kd.textContent = '—'; kd.style.color = '#ffa726'; }, 800);
+
+        addCalEventRow(evt, calEvents.length);
+        updateCalStats();
       }
 
-      // ── Audio pipeline ────────────────────────────────────────────────────
-      async function startAudio() {
-        const s = getSettings();
-        audioCtx = new AudioContext({ sampleRate: 48000 });
-        if (audioCtx.state === 'suspended') await audioCtx.resume();
-        await audioCtx.audioWorklet.addModule('processor.js');
+      function addCalEventRow(evt, n) {
+        const body = document.getElementById('cal-event-body');
+        const empty = body.querySelector('.empty-log');
+        if (empty) empty.parentElement.remove();
 
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 2 }
-        });
+        const bl   = currentBaseline || 1;
+        const rmsMult = (evt.rms / bl).toFixed(2);
+        const hfMult  = (evt.hfEnergy / bl).toFixed(2);
 
-        const source = audioCtx.createMediaStreamSource(stream);
-        processor = new AudioWorkletNode(audioCtx, 'cylinder-processor', {
-          processorOptions: {
-            chunkSamples: 480, sampleRate: 48000,
-            hfBinLow: 10, hfBinHigh: 100,
-            hfFloor: s.hfFloor,
-            debounceMs: s.debounceMs        // FIX: pass debounce at construction
-          }
-        });
-
-        processor.port.onmessage = async (e) => {
-
-          // ── Calibration RMS ───────────────────────────────────────────────
-          if (e.data.type === 'rms') {
-            if (calDone) return;
-            try {
-              // FIX: use audioCtx.currentTime as timestamp, not the RMS value
-              const result = await pyodide.runPythonAsync(
-                `process_chunk(${e.data.value}, ${audioCtx.currentTime})`
-              );
-              const arr    = result.toJs ? result.toJs() : Array.from(result);
-              const status = arr[0];
-              if (typeof status === 'string' && status.startsWith('cal:')) {
-                const pct = parseInt(status.split(':')[1]);
-                calFill.style.width = pct + '%';
-                setStatus(`Calibrating… ${pct}%`, 'cal');
-              } else if (status === 'ready') {
-                calDone = true;
-                calFill.style.width = '100%';
-                calFill.style.background = '#66bb6a';
-                setStatus('Listening…', 'ready');
-                currentBaseline  = await pyodide.runPythonAsync('get_baseline()');
-                currentThreshold = currentBaseline * s.impactMult;
-                processor.port.postMessage({ type: 'set_threshold', value: currentThreshold });
-                updateDebug(currentBaseline, currentThreshold, null);
-              }
-            } catch (err) { console.warn('rms error:', err); }
-          }
-
-          // ── Gated ─────────────────────────────────────────────────────────
-          if (e.data.type === 'gated') {
-            console.debug('GATED rms:', e.data.rms.toFixed(5), 'hf:', e.data.hfEnergy.toFixed(5));
-            updateDebug(currentBaseline, currentThreshold, e.data.hfEnergy);
-          }
-
-          // ── Spike (hard hit) — run lookback in Python ─────────────────────
-          if (e.data.type === 'spike') {
-            console.log('SPIKE rms:', e.data.rms.toFixed(5), 'hf:', e.data.hfEnergy.toFixed(5));
-            updateDebug(currentBaseline, currentThreshold, e.data.hfEnergy);
-
-            try {
-              const ts = e.data.timestamp / 1000;  // worklet ms → s
-
-              // FIX: pass ring buffer as a live Python object — no JSON string interpolation
-              // FIX: clear ring buffer before injection to prevent stale entry accumulation
-              pyodide.globals.set('_ring_js', e.data.ringBuffer);
-              await pyodide.runPythonAsync(`
-tracker.ring_buffer.clear()
-for _rms, _t in _ring_js:
-    tracker.ring_buffer.append((_rms, _t / 1000))
-`);
-
-              const result = await pyodide.runPythonAsync(
-                `process_chunk(${e.data.rms}, ${ts})`
-              );
-              const arr = result.toJs ? result.toJs() : Array.from(result);
-              const [status, n, delta_ms, speed, logTs, tend_rms, tstart_rms] = arr;
-
-              console.log('status:', status, 'delta_ms:', delta_ms, 'speed:', speed);
-
-              if (status === 'cycle' || status === 'unmatched') {
-                addCycleToUI(n, delta_ms, speed, logTs, status,
-                             tend_rms, tstart_rms, e.data.hfEnergy, currentThreshold);
-              } else {
-                const labels = { listen: 'Listening…', debounce: 'Debounce…', noise: 'Noise (too short)' };
-                setStatus(labels[status] || status, 'ready');
-              }
-
-              // Refresh adaptive baseline
-              currentBaseline = await pyodide.runPythonAsync('get_baseline()');
-              if (currentBaseline) {
-                const s2 = getSettings();
-                currentThreshold = currentBaseline * s2.impactMult;
-                processor.port.postMessage({ type: 'set_threshold', value: currentThreshold });
-              }
-            } catch (err) { console.warn('spike error:', err); }
-          }
-        };
-
-        source.connect(processor);
-        processor.connect(audioCtx.destination);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${n}</td>
+          <td>${evt.run}</td>
+          <td>${evt.ts}</td>
+          <td>${evt.rms.toFixed(5)}</td>
+          <td style="color:#ffa726">${rmsMult}×</td>
+          <td>${evt.hfEnergy.toFixed(5)}</td>
+          <td style="color:#ffa726">${hfMult}×</td>`;
+        body.insertBefore(tr, body.firstChild);
       }
+
+      function updateCalStats() {
+        if (calEvents.length === 0) return;
+
+        const rmsVals = calEvents.map(e => e.rms);
+        const hfVals  = calEvents.map(e => e.hfEnergy);
+        const bl      = currentBaseline || 1;
+
+        const mean  = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+        const sd    = arr => { const m = mean(arr); return Math.sqrt(arr.reduce((a, b) => a + (b - m) ** 2, 0) / arr.length); };
+        const min   = arr => Math.min(...arr);
+        const max   = arr => Math.max(...arr);
+
+        const rmsMean = mean(rmsVals);
+        const rmsSd   = sd(rmsVals);
+        const rmsMin  = min(rmsVals);
+        const rmsMax  = max(rmsVals);
+        const hfMean  = mean(hfVals);
+        const hfSd    = sd(hfVals);
+        const hfMin   = min(hfVals);
+        const hfMax   = max(hfVals);
+
+        const rmsMult    = rmsMean / bl;
+        const rmsMultMin = rmsMin  / bl;
+
+        // Unique run count
+        const runs = new Set(calEvents.map(e => e.run)).size;
+
+        document.getElementById('stat-count').textContent    = calEvents.length;
+        document.getElementById('stat-runs').textContent     = `${runs} run${runs !== 1 ? 's' : ''}`;
+        document.getElementById('stat-baseline').textContent = bl.toFixed(5);
+
+        document.getElementById('stat-rms-mean').textContent  = rmsMean.toFixed(5);
+        document.getElementById('stat-rms-range').textContent = `range: ${rmsMin.toFixed(5)} – ${rmsMax.toFixed(5)}`;
+        document.getElementById('stat-rms-sd').textContent    = rmsSd.toFixed(5);
+        document.getElementById('stat-rms-cv').textContent    = `CV: ${rmsMean > 0 ? (rmsSd / rmsMean * 100).toFixed(1) : '—'}%`;
+
+        document.getElementById('stat-hf-mean').textContent   = hfMean.toFixed(5);
+        document.getElementById('stat-hf-range').textContent  = `range: ${hfMin.toFixed(5)} – ${hfMax.toFixed(5)}`;
+        document.getElementById('stat-hf-sd').textContent     = hfSd.toFixed(5);
+        document.getElementById('stat-hf-cv').textContent     = `CV: ${hfMean > 0 ? (hfSd / hfMean * 100).toFixed(1) : '—'}%`;
+
+        document.getElementById('stat-rms-mult').textContent     = rmsMult.toFixed(2) + '×';
+        document.getElementById('stat-rms-mult-min').textContent = rmsMultMin.toFixed(2) + '×';
+
+        // Suggested settings — use worst-case (min) event with 0.6× safety margin
+        // Impact multiplier: sit halfway between baseline and worst-case event
+        const MARGIN = 0.6;
+        const sugImpact    = Math.max(1.5, parseFloat((rmsMultMin * MARGIN).toFixed(1)));
+        // Breakaway: half of impact (T_start is softer than T_end)
+        const sugBreakaway = Math.max(1.0, parseFloat((sugImpact * 0.5).toFixed(1)));
+        // HF floor: 80% of minimum HF energy seen
+        const sugHf        = parseFloat((hfMin * 0.8).toFixed(4));
+
+        document.getElementById('sug-impact').textContent    = sugImpact;
+        document.getElementById('sug-breakaway').textContent = sugBreakaway;
+        document.getElementById('sug-hf').textContent        = sugHf;
+        document.getElementById('sug-margin').textContent    = `${(MARGIN * 100).toFixed(0)}% of worst-case event`;
+      }
+
+      // Apply suggested settings to Settings tab
+      document.getElementById('btn-apply-suggest').addEventListener('click', () => {
+        const impact    = document.getElementById('sug-impact').textContent;
+        const breakaway = document.getElementById('sug-breakaway').textContent;
+        const hf        = document.getElementById('sug-hf').textContent;
+        if (impact === '—') return;
+        document.getElementById('impact-mult').value    = impact;
+        document.getElementById('breakaway-mult').value = breakaway;
+        document.getElementById('hf-floor').value       = hf;
+        // Switch to settings tab so user can see what changed
+        document.querySelector('[data-tab="settings"]').click();
+      });
+
+      // New run — inserts a visual divider in the log
+      document.getElementById('btn-cal-new-run').addEventListener('click', () => {
+        if (calEvents.length === 0) return;
+        calRun++;
+        const body = document.getElementById('cal-event-body');
+        const tr   = document.createElement('tr');
+        tr.className = 'run-divider';
+        tr.innerHTML = `<td colspan="7">── Run ${calRun} ──</td>`;
+        body.insertBefore(tr, body.firstChild);
+      });
+
+      // Clear all calibration data
+      document.getElementById('btn-cal-clear').addEventListener('click', () => {
+        calEvents = []; calRun = 1;
+        document.getElementById('cal-event-body').innerHTML =
+          '<tr><td colspan="7" class="empty-log">No events yet — press ` to capture</td></tr>';
+        document.getElementById('cal-key-display').textContent = '—';
+        ['stat-count','stat-rms-mean','stat-rms-sd','stat-rms-mult','stat-rms-mult-min',
+         'stat-hf-mean','stat-hf-sd','sug-impact','sug-breakaway','sug-hf'].forEach(id => {
+          document.getElementById(id).textContent = '—';
+        });
+        document.getElementById('stat-runs').textContent     = '0 runs';
+        document.getElementById('stat-rms-range').textContent = 'range: —';
+        document.getElementById('stat-rms-cv').textContent    = 'CV: —';
+        document.getElementById('stat-hf-range').textContent  = 'range: —';
+        document.getElementById('stat-hf-cv').textContent     = 'CV: —';
+        document.getElementById('sug-margin').textContent     = '—';
+      });
+
+      // ── Keypress capture (backtick) ───────────────────────────────────────
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== '`') return;
+        e.preventDefault();
+        if (!processor) {
+          setStatus('Start mic first', 'error');
+          setTimeout(() => setStatus(calDone ? 'Listening…' : 'Ready — press Start', 'ready'), 1500);
+          return;
+        }
+        // Request snapshot from worklet
+        processor.port.postMessage({ type: 'snapshot' });
+      });
 
       // ── Buttons ───────────────────────────────────────────────────────────
       async function applyReset() {
@@ -373,7 +770,6 @@ for _rms, _t in _ring_js:
           `breakaway_mult=${s.breakawayMult}, debounce_ms=${s.debounceMs}, ` +
           `max_lookback_ms=${s.maxLookback}, min_lookback_ms=${s.minLookback})`
         );
-        // FIX: sync debounce to worklet whenever settings are applied
         if (processor) {
           processor.port.postMessage({ type: 'set_debounce', value: s.debounceMs });
         }
