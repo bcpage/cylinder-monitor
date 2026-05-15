@@ -1,0 +1,12 @@
+{
+  "name": "Cylinder Monitor",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "postCreateCommand": "pip install jupyterlab numpy scipy matplotlib",
+  "forwardPorts": [8888],
+  "portsAttributes": {
+    "8888": {
+      "label": "JupyterLab",
+      "onAutoForward": "notify"
+    }
+  }
+}
