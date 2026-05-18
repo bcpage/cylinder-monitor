@@ -161,7 +161,7 @@ The open-source `tg` project (github.com/vacaboja/tg, GNU GPL v2) implements thi
 5. **Pass:** Left shows nothing, Right shows spike
 6. **Fail:** Both channels identical — return unit
 
-> See `Appendix_Wireless_Mic_Hardware_Research.md` for full hardware evaluation including all products considered and rejected.
+> See `docs/appendix/Appendix_Wireless_Mic_Hardware_Research.md` for full hardware evaluation including all products considered and rejected.
 
 ### 5.3 BY-V30 Status — Hardware Mono Confirmed
 
@@ -905,7 +905,7 @@ The physical principle validated by this project — contact acoustic timing of 
 
 ### 19.4 Nerf Gun as Validation Proxy
 
-A spring or air-powered Nerf blaster is a pneumatic cylinder. The physics are identical — plunger breaking free (T_start analog) then slamming into the end cap (T_end analog). Mounting both CM28 transmitters on the blaster body and firing 10 shots is the best available dress rehearsal before Tuesday's cylinder validation. NR must be OFF. See `docs/Research_Note_Science_Experiments.md` for full setup and analysis code.
+A spring or air-powered Nerf blaster is a pneumatic cylinder. The physics are identical — plunger breaking free (T_start analog) then slamming into the end cap (T_end analog). Mounting both CM28 transmitters on the blaster body and firing 10 shots is the best available dress rehearsal before Tuesday's cylinder validation. NR must be OFF. See `docs/appendix/Appendix_Science_Experiments.md` for full setup and analysis code.
 
 ---
 

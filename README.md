@@ -67,7 +67,7 @@ analysis/
   cylinder_analysis.ipynb   Signal analysis workbench (JupyterLab)
 docs/
   Pneumatic_Cylinder_Measurement_Plan.md   Full project reference
-  Appendix_Wireless_Mic_Hardware_Research.md
+  appendix/                                Supporting appendices
 session_logs/
   cylinder_sessions.csv     Measurement history (committed after each session)
 ```
