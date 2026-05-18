@@ -6,7 +6,8 @@ A Progressive Web App (PWA) for measuring pneumatic cylinder stroke speed on the
 in-ovo vaccination machine (Zoetis). Uses contact vibration sensing via microphone to detect
 mechanical events (T_start breakaway, T_end impact) and calculate stroke time and speed.
 
-**Goal:** Detect degradation (seal wear, increased friction) across cylinders over time.
+**Primary goal:** Detect which cylinders are out of sync and guide flow control valve adjustments.
+**Secondary goal:** Detect long-term degradation (seal wear, increased friction) over time.
 **Accuracy target:** < 1-2%
 **Deployed at:** https://bcpage.github.io/cylinder-monitor/
 **Platform:** GitHub Pages (static files, HTTPS)
@@ -22,7 +23,8 @@ mechanical events (T_start breakaway, T_end impact) and calculate stroke time an
 | `detector.py` | CycleTracker — adaptive threshold, lookback cycle logic, runs in Pyodide |
 | `manifest.json` | PWA installability |
 | `service_worker.js` | Offline caching — bump cache version on every update |
-| `docs/Pneumatic_Cylinder_Measurement_Plan_v4.4.md` | Full project reference |
+| `analysis/cylinder_analysis.ipynb` | Signal analysis workbench — load/record/log/trend |
+| `docs/Pneumatic_Cylinder_Measurement_Plan.md` | Full project reference |
 
 ---
 
@@ -52,8 +54,10 @@ Result back to UI
 
 ## Critical Constraints
 
-- **NR must be OFF** on wireless mics — Blue light = NR OFF on Boya BY-V series.
+- **NR must be OFF** on wireless mics — check indicator per hardware model.
   AGC/DSP will suppress T_start and make it undetectable.
+- **CM28 Base is current primary hardware** — BY-V30 confirmed hardware mono (L/R identical),
+  retained for interim use only. Run acceptance test on all new hardware before use.
 - **Additive method** (`|Ch0| + |Ch1|`) for laptop/phone mic at ambient distance.
   **Multiplicative method** (`|Ch0| x |Ch1|`) for wireless mics mounted on cylinder.
 - **Threshold multiplier:** 10x validated on laptop mic. Retune from real cylinder data.
@@ -71,17 +75,20 @@ Result back to UI
 ## Current Status
 
 - POC complete and validated on laptop mic (May 12, 2026)
+- CM28 Base ordered (May 18, 2026) — acceptance test required on arrival
 - Cylinder hardware validation pending
 - HF Floor (0.01) not yet empirically tuned — tune from real cylinder hfEnergy data
 - MIN/MAX lookback window needs tightening once real stroke time confirmed
 
 ## What Is Not Done Yet
 
-- Cylinder hardware validation
+- CM28 Base acceptance test
+- Cylinder hardware validation (7-phase roving mic protocol)
+- PSI entry field in UI (single field, gates Start button)
 - HF Floor tuning
 - Data logging and export
 - Trend view across sessions
-- Cylinder selection (1-4) in UI
+- Cylinder selection (1-6) in UI
 - Android Chrome test
 - iPhone Safari test (T_start detectability unconfirmed on iOS)
 

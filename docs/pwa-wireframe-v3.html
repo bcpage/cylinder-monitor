@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cylinder Monitor PWA — Wireframe v3</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #ffffff;
+    font-family: 'Courier New', monospace;
+    color: #000000;
+    padding: 28px;
+  }
+
+  h1 {
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #000;
+    margin-bottom: 4px;
+    border-bottom: 2px solid #000;
+    padding-bottom: 10px;
+  }
+
+  .version-note {
+    font-size: 11px;
+    color: #444;
+    margin: 6px 0 28px;
+  }
+
+  /* ── LAYOUT ── */
+  .concept-grid {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #000;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #000;
+    padding-bottom: 4px;
+  }
+
+  /* ── PHONE FRAME ── */
+  .phone-frame {
+    width: 252px;
+    border: 3px solid #000;
+    border-radius: 24px;
+    padding: 14px 10px 18px;
+    background: #fff;
+  }
+
+  .phone-notch {
+    width: 64px; height: 10px;
+    background: #000;
+    border-radius: 5px;
+    margin: 0 auto 14px;
+  }
+
+  /* ── DESKTOP FRAME ── */
+  .desktop-frame {
+    border: 3px solid #000;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .desktop-titlebar {
+    height: 26px;
+    background: #000;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .titlebar-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    border: 1px solid #fff;
+  }
+
+  .titlebar-text {
+    font-size: 10px;
+    color: #fff;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-left: 6px;
+  }
+
+  .titlebar-mode {
+    margin-left: auto;
+    font-size: 9px;
+    color: #aaa;
+    letter-spacing: 0.08em;
+  }
+
+  .desktop-body {
+    display: grid;
+    grid-template-columns: 190px 1fr;
+    min-height: 500px;
+  }
+
+  .desktop-sidebar {
+    border-right: 2px solid #000;
+    padding: 14px 12px;
+    background: #f5f5f5;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .desktop-main {
+    padding: 18px;
+    background: #fff;
+  }
+
+  /* ── SHARED BLOCK ── */
+  .block {
+    border: 2px solid #000;
+    border-radius: 3px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    background: #fff;
+  }
+
+  .block-title {
+    font-size: 9px;
+    font-weight: bold;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #000;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 3px;
+  }
+
+  .new-tag {
+    font-size: 8px;
+    font-weight: normal;
+    background: #000;
+    color: #fff;
+    border-radius: 2px;
+    padding: 1px 4px;
+    margin-left: 4px;
+    letter-spacing: 0.06em;
+    vertical-align: middle;
+  }
+
+  /* ── STATUS ── */
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .status-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 2px solid #000;
+    flex-shrink: 0;
+  }
+
+  .status-text { font-size: 11px; color: #000; }
+
+  .cal-track {
+    height: 8px;
+    border: 2px solid #000;
+    border-radius: 3px;
+    background: #fff;
+    margin-bottom: 3px;
+    overflow: hidden;
+  }
+
+  .cal-fill {
+    height: 100%;
+    width: 65%;
+    background: #000;
+  }
+
+  .cal-label { font-size: 9px; color: #444; }
+
+  /* ── MODE TOGGLE ── */
+  .mode-toggle {
+    display: flex;
+    border: 2px solid #000;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .mode-btn {
+    flex: 1;
+    padding: 7px 4px;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #888;
+    background: #f0f0f0;
+    border: none;
+    cursor: pointer;
+  }
+
+  .mode-btn.active {
+    color: #000;
+    background: #fff;
+    border-bottom: 3px solid #000;
+  }
+
+  .mode-btn + .mode-btn {
+    border-left: 2px solid #000;
+  }
+
+  /* ── FILE ZONE ── */
+  .file-zone {
+    border: 2px dashed #000;
+    border-radius: 3px;
+    padding: 12px;
+    text-align: center;
+    background: #fafafa;
+    margin-bottom: 6px;
+  }
+
+  .file-zone-icon { font-size: 18px; color: #000; margin-bottom: 4px; }
+  .file-zone-text { font-size: 10px; color: #000; line-height: 1.6; margin-bottom: 6px; }
+  .file-zone-hint { font-size: 9px; color: #666; margin-top: 4px; }
+
+  .btn-outline {
+    display: inline-block;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #000;
+    border: 2px solid #000;
+    border-radius: 3px;
+    padding: 4px 10px;
+    background: #fff;
+  }
+
+  /* ── FILE LOADED ── */
+  .file-loaded {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 2px solid #000;
+    border-radius: 3px;
+    padding: 6px 8px;
+    background: #f5f5f5;
+    margin-bottom: 6px;
+  }
+
+  .file-icon { font-size: 13px; color: #000; }
+  .file-name { flex: 1; font-size: 10px; color: #000; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-clear { font-size: 12px; color: #000; font-weight: bold; cursor: pointer; }
+
+  /* ── CYLINDER SELECTOR ── */
+  .cyl-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+
+  .cyl-btn {
+    border: 2px solid #ccc;
+    border-radius: 3px;
+    padding: 7px 2px;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    font-weight: bold;
+    color: #aaa;
+    background: #fff;
+  }
+
+  .cyl-btn.on {
+    border-color: #000;
+    color: #000;
+    background: #fff;
+  }
+
+  /* ── PSI ── */
+  .psi-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .psi-label { font-size: 11px; font-weight: bold; color: #000; width: 28px; }
+
+  .psi-input {
+    flex: 1;
+    height: 28px;
+    border: 2px solid #000;
+    border-radius: 3px;
+    background: #fff;
+  }
+
+  .psi-unit { font-size: 11px; color: #000; }
+
+  /* ── METRIC ROW ── */
+  .metric-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .metric-cell { flex: 1; text-align: center; }
+
+  .metric-box {
+    height: 28px;
+    border: 2px solid #000;
+    border-radius: 3px;
+    background: #f5f5f5;
+    margin-bottom: 3px;
+  }
+
+  .metric-label { font-size: 9px; font-weight: bold; color: #000; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* ── BUTTONS ── */
+  .btn-primary {
+    width: 100%;
+    height: 34px;
+    border: 2px solid #000;
+    border-radius: 3px;
+    background: #000;
+    color: #fff;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 6px;
+  }
+
+  .btn-secondary {
+    flex: 1;
+    height: 30px;
+    border: 2px solid #000;
+    border-radius: 3px;
+    background: #fff;
+    color: #000;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-secondary.muted {
+    border-color: #ccc;
+    color: #aaa;
+  }
+
+  .btn-row { display: flex; gap: 6px; margin-bottom: 6px; }
+
+  .btn-hint { font-size: 9px; color: #666; margin-bottom: 8px; }
+
+  /* ── CYCLE LOG ── */
+  .log-header, .log-row {
+    display: flex;
+    gap: 4px;
+    padding: 4px 0;
+    border-bottom: 1px solid #ccc;
+    align-items: center;
+  }
+
+  .log-header { border-bottom: 2px solid #000; }
+
+  .lh { font-size: 9px; font-weight: bold; color: #000; text-transform: uppercase; }
+  .ld { font-size: 10px; color: #000; }
+
+  .lc-xs  { width: 12px; flex-shrink: 0; }
+  .lc-sm  { flex: 1; }
+  .lc-md  { flex: 1.5; }
+  .lc-lg  { flex: 2; }
+
+  .log-dot { width: 8px; height: 8px; border-radius: 50%; border: 2px solid #000; display: inline-block; }
+
+  /* ── SIDEBAR SECTIONS ── */
+  .sb-section { margin-bottom: 16px; }
+
+  .sb-title {
+    font-size: 9px;
+    font-weight: bold;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #000;
+    border-bottom: 2px solid #000;
+    padding-bottom: 3px;
+    margin-bottom: 7px;
+  }
+
+  .sb-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .sb-key { font-size: 10px; color: #000; }
+
+  .sb-val {
+    width: 56px; height: 18px;
+    border: 2px solid #000;
+    border-radius: 2px;
+    background: #fff;
+  }
+
+  .sb-toggle {
+    width: 30px; height: 16px;
+    border: 2px solid #000;
+    border-radius: 8px;
+    background: #fff;
+    position: relative;
+  }
+
+  /* ── DESKTOP PANELS ── */
+  .panel {
+    border: 2px solid #000;
+    border-radius: 3px;
+    padding: 12px;
+    margin-bottom: 12px;
+    background: #fff;
+  }
+
+  .panel-head {
+    font-size: 9px;
+    font-weight: bold;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #000;
+    border-bottom: 2px solid #000;
+    padding-bottom: 4px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .panel-badge {
+    font-size: 8px;
+    background: #000;
+    color: #fff;
+    border-radius: 2px;
+    padding: 1px 5px;
+    letter-spacing: 0.06em;
+  }
+
+  .panel-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+
+  /* ── DESKTOP METRICS ── */
+  .d-metric-row { display: flex; gap: 8px; }
+  .d-metric { flex: 1; text-align: center; }
+  .d-metric-box {
+    height: 40px;
+    border: 2px solid #000;
+    border-radius: 3px;
+    background: #f5f5f5;
+    margin-bottom: 4px;
+  }
+  .d-metric-lbl { font-size: 9px; font-weight: bold; color: #000; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* ── TREND ── */
+  .trend-box {
+    height: 80px;
+    border: 2px solid #000;
+    border-radius: 3px;
+    background: #fafafa;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .trend-x { position: absolute; bottom: 14px; left: 22px; right: 8px; height: 2px; background: #000; }
+  .trend-y { position: absolute; top: 8px; bottom: 14px; left: 22px; width: 2px; background: #000; }
+  .trend-line-hint {
+    position: absolute; bottom: 30px; left: 24px; right: 8px;
+    height: 1px; background: #aaa; border-top: 1px dashed #999;
+  }
+  .trend-lbl { position: absolute; bottom: 2px; left: 24px; font-size: 8px; color: #666; }
+  .trend-ylbl { position: absolute; top: 8px; left: 2px; font-size: 8px; color: #666; }
+
+  .future-note { font-size: 9px; color: #888; margin-top: 5px; }
+
+  /* ── LOG TABLE ── */
+  .log-table { width: 100%; border-collapse: collapse; }
+  .log-table th {
+    font-size: 9px; font-weight: bold;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: #000; text-align: left;
+    padding: 5px 4px;
+    border-bottom: 2px solid #000;
+  }
+  .log-table td {
+    font-size: 10px; color: #000;
+    padding: 5px 4px;
+    border-bottom: 1px solid #ccc;
+  }
+  .src-tag {
+    font-size: 8px;
+    border: 1px solid #000;
+    border-radius: 2px;
+    padding: 1px 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── ANNOTATIONS ── */
+  .ann-block { margin-top: 16px; }
+
+  .ann {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin-bottom: 6px;
+  }
+
+  .ann-num {
+    font-size: 10px;
+    font-weight: bold;
+    color: #000;
+    border: 2px solid #000;
+    border-radius: 50%;
+    width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .ann-text { font-size: 11px; color: #222; line-height: 1.5; }
+
+  /* ── DIVIDER ── */
+  .full-divider {
+    grid-column: 1 / -1;
+    border: none;
+    border-top: 2px solid #000;
+    margin: 12px 0 28px;
+  }
+
+  .full-note {
+    grid-column: 1 / -1;
+    font-size: 11px;
+    color: #444;
+  }
+
+  .sidebar-file-zone {
+    border: 2px dashed #000;
+    border-radius: 3px;
+    padding: 8px;
+    text-align: center;
+    background: #fff;
+    margin-bottom: 8px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Cylinder Monitor PWA — Wireframe v3</h1>
+<div class="version-note">Changes from v2: High contrast black/white · same layout and components</div>
+
+<div class="concept-grid">
+
+  <!-- ══════════════════
+       PHONE
+  ══════════════════ -->
+  <div>
+    <div class="section-label">Mobile — Portrait</div>
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+
+      <!-- STATUS -->
+      <div class="block">
+        <div class="block-title">① Status</div>
+        <div class="status-row">
+          <div class="status-dot"></div>
+          <div class="status-text">Calibrating…</div>
+        </div>
+        <div class="cal-track"><div class="cal-fill"></div></div>
+        <div class="cal-label">Calibration 65% · Live Mic</div>
+      </div>
+
+      <!-- INPUT MODE -->
+      <div class="block">
+        <div class="block-title">② Input Mode <span class="new-tag">new</span></div>
+        <div class="mode-toggle">
+          <div class="mode-btn active">🎙 Live Mic</div>
+          <div class="mode-btn">📂 File</div>
+        </div>
+
+        <!-- File zone (shown when File tab active) -->
+        <div style="border:1px solid #ccc;border-radius:3px;padding:6px;margin-bottom:4px;">
+          <div style="font-size:9px;color:#888;margin-bottom:5px;font-weight:bold;">FILE MODE — shown when File tab active:</div>
+          <div class="file-zone">
+            <div class="file-zone-icon">⬆</div>
+            <div class="file-zone-text">Drop WAV / M4A / FLAC<br>or tap to browse</div>
+            <div class="btn-outline">BROWSE</div>
+            <div class="file-zone-hint">48 kHz stereo preferred</div>
+          </div>
+          <div style="font-size:9px;color:#888;margin:5px 0 3px;font-weight:bold;">After file selected:</div>
+          <div class="file-loaded">
+            <div class="file-icon">♪</div>
+            <div class="file-name">cyl1_session_04.wav</div>
+            <div class="file-clear">✕</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SESSION SETUP -->
+      <div class="block">
+        <div class="block-title">③ Session Setup</div>
+        <div class="cyl-grid">
+          <div class="cyl-btn on">CYL 1</div>
+          <div class="cyl-btn">CYL 2</div>
+          <div class="cyl-btn">CYL 3</div>
+          <div class="cyl-btn">CYL 4</div>
+        </div>
+        <div class="psi-row">
+          <div class="psi-label">PSI</div>
+          <div class="psi-input"></div>
+          <div class="psi-unit">psi</div>
+        </div>
+      </div>
+
+      <!-- METRICS -->
+      <div class="block">
+        <div class="block-title">④ Live Metrics</div>
+        <div class="metric-row">
+          <div class="metric-cell">
+            <div class="metric-box"></div>
+            <div class="metric-label">Stroke ms</div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-box"></div>
+            <div class="metric-label">Speed in/s</div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-box"></div>
+            <div class="metric-label">SD ms</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="block">
+        <div class="block-title">⑤ Actions <span class="new-tag">new</span></div>
+        <div class="btn-primary">▶ START SESSION</div>
+        <div class="btn-row">
+          <div class="btn-secondary">💾 SAVE WAV</div>
+          <div class="btn-secondary muted">EXPORT CSV</div>
+        </div>
+        <div class="btn-hint">Save WAV — live mode only. Disabled in File mode.</div>
+      </div>
+
+      <!-- CYCLE LOG -->
+      <div class="block">
+        <div class="block-title">⑥ Cycle Log</div>
+        <div class="log-header">
+          <div class="lc-xs lh"></div>
+          <div class="lc-lg lh">#</div>
+          <div class="lc-md lh">ms</div>
+          <div class="lc-sm lh">in/s</div>
+        </div>
+        <div class="log-row">
+          <div class="lc-xs"><span class="log-dot"></span></div>
+          <div class="lc-lg ld">1</div>
+          <div class="lc-md ld">——</div>
+          <div class="lc-sm ld">——</div>
+        </div>
+        <div class="log-row">
+          <div class="lc-xs"><span class="log-dot"></span></div>
+          <div class="lc-lg ld">2</div>
+          <div class="lc-md ld">——</div>
+          <div class="lc-sm ld">——</div>
+        </div>
+        <div class="log-row">
+          <div class="lc-xs"><span class="log-dot"></span></div>
+          <div class="lc-lg ld">3</div>
+          <div class="lc-md ld">——</div>
+          <div class="lc-sm ld">——</div>
+        </div>
+      </div>
+
+      <div style="text-align:center;font-size:10px;font-weight:bold;color:#666;margin-top:8px;letter-spacing:0.1em;">
+        ⚙ SETTINGS &nbsp;|&nbsp; EXPORT
+      </div>
+    </div><!-- /phone-frame -->
+
+    <!-- Phone annotations -->
+    <div class="ann-block">
+      <div class="ann"><div class="ann-num">②</div><div class="ann-text">Mode toggle switches audio source. File tab shows drop zone; Live tab shows calibration bar. Cal bar hidden in File mode.</div></div>
+      <div class="ann"><div class="ann-num">⑤</div><div class="ann-text">Save WAV records the live mic session to device. Grays out automatically in File mode — file already on disk.</div></div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════
+       DESKTOP
+  ══════════════════ -->
+  <div>
+    <div class="section-label">Desktop / Laptop — Browser</div>
+    <div class="desktop-frame">
+
+      <div class="desktop-titlebar">
+        <div class="titlebar-dot"></div>
+        <div class="titlebar-dot"></div>
+        <div class="titlebar-dot"></div>
+        <div class="titlebar-text">Cylinder Monitor</div>
+        <div class="titlebar-mode">Live Mic mode</div>
+      </div>
+
+      <div class="desktop-body">
+
+        <!-- SIDEBAR -->
+        <div class="desktop-sidebar">
+
+          <div class="sb-section">
+            <div class="sb-title">Input <span class="new-tag">new</span></div>
+            <div class="mode-toggle" style="margin-bottom:8px;">
+              <div class="mode-btn active" style="font-size:9px;">🎙 Live</div>
+              <div class="mode-btn" style="font-size:9px;">📂 File</div>
+            </div>
+            <div class="sidebar-file-zone">
+              <div style="font-size:11px;color:#000;margin-bottom:4px;">⬆ Drop or browse</div>
+              <div style="font-size:9px;color:#666;margin-bottom:6px;">WAV · M4A · FLAC</div>
+              <div class="btn-outline" style="font-size:9px;padding:3px 8px;">BROWSE</div>
+            </div>
+          </div>
+
+          <div class="sb-section">
+            <div class="sb-title">Session</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px;">
+              <div class="cyl-btn on" style="padding:5px;">CYL 1</div>
+              <div class="cyl-btn" style="padding:5px;">CYL 2</div>
+              <div class="cyl-btn" style="padding:5px;">CYL 3</div>
+              <div class="cyl-btn" style="padding:5px;">CYL 4</div>
+            </div>
+            <div class="sb-row"><div class="sb-key">PSI</div><div class="sb-val"></div></div>
+            <div class="sb-row"><div class="sb-key">Stroke in</div><div class="sb-val"></div></div>
+          </div>
+
+          <div class="sb-section">
+            <div class="sb-title">Thresholds</div>
+            <div class="sb-row"><div class="sb-key">Multiplier</div><div class="sb-val"></div></div>
+            <div class="sb-row"><div class="sb-key">HF Floor</div><div class="sb-val"></div></div>
+            <div class="sb-row"><div class="sb-key">Debounce ms</div><div class="sb-val"></div></div>
+            <div class="sb-row"><div class="sb-key">Min cycle ms</div><div class="sb-val"></div></div>
+            <div class="sb-row"><div class="sb-key">Max cycle ms</div><div class="sb-val"></div></div>
+          </div>
+
+          <div class="sb-section">
+            <div class="sb-title">Hardware</div>
+            <div class="sb-row"><div class="sb-key">Dual channel</div><div class="sb-toggle"></div></div>
+            <div class="sb-row"><div class="sb-key">Coincidence</div><div class="sb-toggle"></div></div>
+          </div>
+
+          <div style="margin-top:auto;padding-top:12px;">
+            <div class="btn-primary">▶ START SESSION</div>
+            <div class="btn-row">
+              <div class="btn-secondary" style="font-size:9px;">💾 SAVE WAV</div>
+              <div class="btn-secondary muted" style="font-size:9px;">EXPORT CSV</div>
+            </div>
+            <div class="btn-hint">Save WAV · live mode only</div>
+          </div>
+        </div><!-- /sidebar -->
+
+        <!-- MAIN -->
+        <div class="desktop-main">
+
+          <!-- Status bar -->
+          <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px;">
+            <div class="status-row" style="flex:1;margin-bottom:0;">
+              <div class="status-dot"></div>
+              <div class="status-text">Calibrating… · Live Mic</div>
+            </div>
+            <div style="flex:2;">
+              <div class="cal-track"><div class="cal-fill"></div></div>
+              <div class="cal-label">1.5s calibration window — 65%</div>
+            </div>
+          </div>
+
+          <!-- File input panel (file mode only) -->
+          <div class="panel" style="margin-bottom:12px;">
+            <div class="panel-head">
+              File Input <span class="panel-badge">SHOWN IN FILE MODE ONLY</span>
+            </div>
+            <div style="display:flex;gap:16px;align-items:flex-start;">
+              <div class="file-zone" style="flex:1;margin-bottom:0;">
+                <div class="file-zone-icon">⬆</div>
+                <div class="file-zone-text">Drop WAV / M4A / FLAC<br>or click to browse</div>
+                <div class="btn-outline">BROWSE FILES</div>
+                <div class="file-zone-hint">48 kHz stereo · dual channel preferred</div>
+              </div>
+              <div style="flex:1;">
+                <div style="font-size:10px;font-weight:bold;color:#000;margin-bottom:6px;">After file selected:</div>
+                <div class="file-loaded" style="margin-bottom:8px;">
+                  <div class="file-icon">♪</div>
+                  <div class="file-name">cyl1_session_04_2026-05-20.wav</div>
+                  <div class="file-clear">✕</div>
+                </div>
+                <div style="font-size:10px;color:#444;line-height:1.8;">
+                  Duration: ——<br>
+                  Sample rate: ——<br>
+                  Channels: ——
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Metric panels -->
+          <div class="panel-row">
+            <div class="panel">
+              <div class="panel-head">Live — Cyl 1 <span class="panel-badge">LIVE MIC</span></div>
+              <div class="d-metric-row">
+                <div class="d-metric">
+                  <div class="d-metric-box"></div>
+                  <div class="d-metric-lbl">Stroke ms</div>
+                </div>
+                <div class="d-metric">
+                  <div class="d-metric-box"></div>
+                  <div class="d-metric-lbl">Speed in/s</div>
+                </div>
+                <div class="d-metric">
+                  <div class="d-metric-box"></div>
+                  <div class="d-metric-lbl">SD ms</div>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head">Session Average <span class="panel-badge">10-CYCLE</span></div>
+              <div class="d-metric-row">
+                <div class="d-metric">
+                  <div class="d-metric-box"></div>
+                  <div class="d-metric-lbl">Mean ms</div>
+                </div>
+                <div class="d-metric">
+                  <div class="d-metric-box"></div>
+                  <div class="d-metric-lbl">CV %</div>
+                </div>
+                <div class="d-metric">
+                  <div class="d-metric-box"></div>
+                  <div class="d-metric-lbl">PSI logged</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Trend chart -->
+          <div class="panel">
+            <div class="panel-head">Stroke Time Trend — All Sessions</div>
+            <div class="trend-box">
+              <div class="trend-y"></div>
+              <div class="trend-x"></div>
+              <div class="trend-line-hint"></div>
+              <div class="trend-lbl">sessions →</div>
+              <div class="trend-ylbl">ms</div>
+            </div>
+            <div class="future-note">CUSUM flag · Changepoint marker · Inter-cylinder ratio — future phase</div>
+          </div>
+
+          <!-- Cycle log table -->
+          <div class="panel">
+            <div class="panel-head">Cycle Log</div>
+            <table class="log-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Stroke ms</th>
+                  <th>Speed in/s</th>
+                  <th>T_start ms</th>
+                  <th>T_end ms</th>
+                  <th>PSI</th>
+                  <th>Source</th>
+                  <th>Flag</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>1</td><td>——</td><td>——</td><td>——</td><td>——</td><td>——</td><td><span class="src-tag">live</span></td><td><span class="log-dot"></span></td></tr>
+                <tr><td>2</td><td>——</td><td>——</td><td>——</td><td>——</td><td>——</td><td><span class="src-tag">file</span></td><td><span class="log-dot"></span></td></tr>
+                <tr><td>3</td><td>——</td><td>——</td><td>——</td><td>——</td><td>——</td><td><span class="src-tag">live</span></td><td><span class="log-dot"></span></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div><!-- /main -->
+      </div><!-- /body -->
+    </div><!-- /desktop-frame -->
+
+    <!-- Desktop annotations -->
+    <div class="ann-block">
+      <div class="ann"><div class="ann-num">M</div><div class="ann-text">Mode toggle in sidebar. Live: cal bar active, Save WAV enabled. File: file panel appears in main, cal bar hidden, Save WAV disabled.</div></div>
+      <div class="ann"><div class="ann-num">F</div><div class="ann-text">File panel shows duration, sample rate, channel count after load — confirms 48 kHz stereo before running analysis.</div></div>
+      <div class="ann"><div class="ann-num">L</div><div class="ann-text">Source column in log marks each row "live" or "file" — provenance clear if sessions mix both modes.</div></div>
+    </div>
+  </div>
+
+  <hr class="full-divider">
+
+  <p class="full-note">
+    Mobile: sidebar collapses to bottom sheet. Trend chart hidden on mobile — accessible via tab. Log shows 3 columns on mobile, 8 on desktop.
+  </p>
+
+</div>
+</body>
+</html>
