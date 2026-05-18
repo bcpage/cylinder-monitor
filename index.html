@@ -154,6 +154,7 @@
     .section-label:first-child { margin-top: 0; }
     .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
     .hint { font-size: 0.72rem; color: #444; margin-top: -6px; margin-bottom: 10px; line-height: 1.4; }
+    #file-name { font-size: 0.72rem; color: #555; margin-top: 6px; min-height: 1em; }
   </style>
 </head>
 <body>
@@ -199,8 +200,11 @@
     <div class="card">
       <div class="btn-row">
         <button id="btn-start">Start</button>
+        <button id="btn-load" class="secondary">Load File</button>
         <button id="btn-reset" class="danger">Reset</button>
       </div>
+      <div id="file-name"></div>
+      <input type="file" id="file-input" accept=".wav,.m4a,.mp4,audio/*" style="display:none">
     </div>
   </div>
 
@@ -418,6 +422,81 @@
       let running = false, calDone = false;
       let currentBaseline = null, currentThreshold = null;
 
+      // ── Shared message handler (live mic + file playback) ──────────────
+      async function handleMessage(data) {
+
+        if (data.type === 'rms') {
+          if (calDone) return;
+          try {
+            const result = await pyodide.runPythonAsync(
+              `process_chunk(${data.value}, ${audioCtx ? audioCtx.currentTime : 0})`
+            );
+            const arr    = result.toJs ? result.toJs() : Array.from(result);
+            const status = arr[0];
+            if (typeof status === 'string' && status.startsWith('cal:')) {
+              const pct = parseInt(status.split(':')[1]);
+              calFill.style.width = pct + '%';
+              setStatus(`Calibrating… ${pct}%`, 'cal');
+            } else if (status === 'ready') {
+              calDone = true;
+              calFill.style.width = '100%';
+              calFill.style.background = '#66bb6a';
+              setStatus('Listening…', 'ready');
+              currentBaseline  = await pyodide.runPythonAsync('get_baseline()');
+              currentThreshold = currentBaseline * getSettings().impactMult;
+              if (processor) processor.port.postMessage({ type: 'set_threshold', value: currentThreshold });
+              updateDebug(currentBaseline, currentThreshold, null);
+              document.getElementById('stat-baseline').textContent = currentBaseline.toFixed(5);
+            }
+          } catch (err) { console.warn('rms error:', err); }
+        }
+
+        if (data.type === 'gated') {
+          console.debug('GATED rms:', data.rms.toFixed(5), 'hf:', data.hfEnergy.toFixed(5));
+          updateDebug(currentBaseline, currentThreshold, data.hfEnergy);
+        }
+
+        if (data.type === 'spike') {
+          console.log('SPIKE rms:', data.rms.toFixed(5), 'hf:', data.hfEnergy.toFixed(5));
+          updateDebug(currentBaseline, currentThreshold, data.hfEnergy);
+          try {
+            const ts = data.timestamp / 1000;
+            pyodide.globals.set('_ring_js', data.ringBuffer);
+            await pyodide.runPythonAsync(`
+tracker.ring_buffer.clear()
+for _rms, _t in _ring_js:
+    tracker.ring_buffer.append((_rms, _t / 1000))
+`);
+            const result = await pyodide.runPythonAsync(
+              `process_chunk(${data.rms}, ${ts})`
+            );
+            const arr = result.toJs ? result.toJs() : Array.from(result);
+            const [status, n, delta_ms, speed, logTs, tend_rms, tstart_rms, baseline_at_event] = arr;
+            console.log('status:', status, 'delta_ms:', delta_ms, 'speed:', speed);
+
+            if (status === 'cycle' || status === 'unmatched') {
+              addCycleToUI(n, delta_ms, speed, logTs, status,
+                           tend_rms, tstart_rms, data.hfEnergy, currentThreshold);
+            } else {
+              const labels = { listen: 'Listening…', debounce: 'Debounce…', noise: 'Noise' };
+              setStatus(labels[status] || status, 'ready');
+            }
+
+            currentBaseline = await pyodide.runPythonAsync('get_baseline()');
+            if (currentBaseline) {
+              currentThreshold = currentBaseline * getSettings().impactMult;
+              if (processor) processor.port.postMessage({ type: 'set_threshold', value: currentThreshold });
+              document.getElementById('stat-baseline').textContent = currentBaseline.toFixed(5);
+              updateDebug(currentBaseline, currentThreshold, data.hfEnergy);
+            }
+          } catch (err) { console.warn('spike error:', err); }
+        }
+
+        if (data.type === 'snapshot') {
+          handleCalSnapshot(data.rms, data.hfEnergy);
+        }
+      }
+
       async function startAudio(stream) {
         const s = getSettings();
         audioCtx = new AudioContext({ sampleRate: 48000 });
@@ -433,83 +512,107 @@
           }
         });
 
-        processor.port.onmessage = async (e) => {
-
-          if (e.data.type === 'rms') {
-            if (calDone) return;
-            try {
-              const result = await pyodide.runPythonAsync(
-                `process_chunk(${e.data.value}, ${audioCtx.currentTime})`
-              );
-              const arr    = result.toJs ? result.toJs() : Array.from(result);
-              const status = arr[0];
-              if (typeof status === 'string' && status.startsWith('cal:')) {
-                const pct = parseInt(status.split(':')[1]);
-                calFill.style.width = pct + '%';
-                setStatus(`Calibrating… ${pct}%`, 'cal');
-              } else if (status === 'ready') {
-                calDone = true;
-                calFill.style.width = '100%';
-                calFill.style.background = '#66bb6a';
-                setStatus('Listening…', 'ready');
-                currentBaseline  = await pyodide.runPythonAsync('get_baseline()');
-                currentThreshold = currentBaseline * s.impactMult;
-                processor.port.postMessage({ type: 'set_threshold', value: currentThreshold });
-                updateDebug(currentBaseline, currentThreshold, null);
-                document.getElementById('stat-baseline').textContent = currentBaseline.toFixed(5);
-              }
-            } catch (err) { console.warn('rms error:', err); }
-          }
-
-          if (e.data.type === 'gated') {
-            console.debug('GATED rms:', e.data.rms.toFixed(5), 'hf:', e.data.hfEnergy.toFixed(5));
-            updateDebug(currentBaseline, currentThreshold, e.data.hfEnergy);
-          }
-
-          if (e.data.type === 'spike') {
-            console.log('SPIKE rms:', e.data.rms.toFixed(5), 'hf:', e.data.hfEnergy.toFixed(5));
-            updateDebug(currentBaseline, currentThreshold, e.data.hfEnergy);
-            try {
-              const ts = e.data.timestamp / 1000;
-              pyodide.globals.set('_ring_js', e.data.ringBuffer);
-              await pyodide.runPythonAsync(`
-tracker.ring_buffer.clear()
-for _rms, _t in _ring_js:
-    tracker.ring_buffer.append((_rms, _t / 1000))
-`);
-              const result = await pyodide.runPythonAsync(
-                `process_chunk(${e.data.rms}, ${ts})`
-              );
-              const arr = result.toJs ? result.toJs() : Array.from(result);
-              const [status, n, delta_ms, speed, logTs, tend_rms, tstart_rms, baseline_at_event] = arr;
-              console.log('status:', status, 'delta_ms:', delta_ms, 'speed:', speed);
-
-              if (status === 'cycle' || status === 'unmatched') {
-                addCycleToUI(n, delta_ms, speed, logTs, status,
-                             tend_rms, tstart_rms, e.data.hfEnergy, currentThreshold);
-              } else {
-                const labels = { listen: 'Listening…', debounce: 'Debounce…', noise: 'Noise' };
-                setStatus(labels[status] || status, 'ready');
-              }
-
-              currentBaseline = await pyodide.runPythonAsync('get_baseline()');
-              if (currentBaseline) {
-                const s2 = getSettings();
-                currentThreshold = currentBaseline * s2.impactMult;
-                processor.port.postMessage({ type: 'set_threshold', value: currentThreshold });
-                document.getElementById('stat-baseline').textContent = currentBaseline.toFixed(5);
-                updateDebug(currentBaseline, currentThreshold, e.data.hfEnergy);
-              }
-            } catch (err) { console.warn('spike error:', err); }
-          }
-
-          if (e.data.type === 'snapshot') {
-            handleCalSnapshot(e.data.rms, e.data.hfEnergy);
-          }
-        };
-
+        processor.port.onmessage = async (e) => handleMessage(e.data);
         source.connect(processor);
         processor.connect(audioCtx.destination);
+      }
+
+      // ── File playback ──────────────────────────────────────────────────
+      async function processFileAudio(file) {
+        if (running) return;
+        running = true; calDone = false;
+        document.getElementById('btn-start').disabled = true;
+        document.getElementById('btn-load').disabled  = true;
+        document.getElementById('file-name').textContent = file.name;
+        calFill.style.background = '#ffa726'; calFill.style.width = '0%';
+        setStatus(`Decoding ${file.name}…`, 'cal');
+
+        let audioBuffer;
+        try {
+          const tmpCtx   = new AudioContext({ sampleRate: 48000 });
+          const arrayBuf = await file.arrayBuffer();
+          audioBuffer    = await tmpCtx.decodeAudioData(arrayBuf);
+          await tmpCtx.close();
+        } catch (err) {
+          setStatus('File error: ' + err.message, 'error');
+          running = false;
+          document.getElementById('btn-start').disabled = false;
+          document.getElementById('btn-load').disabled  = false;
+          return;
+        }
+
+        await applyReset();
+
+        const CHUNK = 480, SR = 48000;
+        const ch0   = audioBuffer.getChannelData(0);
+        const ch1   = audioBuffer.numberOfChannels > 1 ? audioBuffer.getChannelData(1) : ch0;
+        const total = Math.floor(ch0.length / CHUNK);
+        const s     = getSettings();
+        const HF_LO = 10, HF_HI = 100, RING_SIZE = 25;
+
+        // Same DFT as processor.js — only runs when RMS > threshold
+        function hfEnergy(chunk) {
+          const N = chunk.length, half = Math.floor(N / 2);
+          let energy = 0;
+          const hi = Math.min(HF_HI, half - 1);
+          for (let k = HF_LO; k <= hi; k++) {
+            let re = 0, im = 0;
+            for (let n = 0; n < N; n++) {
+              const a = (2 * Math.PI * k * n) / N;
+              re += chunk[n] * Math.cos(a);
+              im -= chunk[n] * Math.sin(a);
+            }
+            energy += Math.sqrt(re*re + im*im) / N;
+          }
+          return energy;
+        }
+
+        const ring = [];
+        let lastSpikeMs = -Infinity;
+
+        for (let ci = 0; ci < total; ci++) {
+          if (!running) break; // Reset was pressed
+
+          const i     = ci * CHUNK;
+          const chunk = new Float32Array(CHUNK);
+          for (let j = 0; j < CHUNK; j++)
+            chunk[j] = Math.abs(ch0[i+j]) + Math.abs(ch1[i+j]);
+
+          let sumSq = 0;
+          for (let j = 0; j < CHUNK; j++) sumSq += chunk[j] * chunk[j];
+          const rms   = Math.sqrt(sumSq / CHUNK);
+          const nowMs = (i / SR) * 1000;
+
+          ring.push([rms, nowMs]);
+          if (ring.length > RING_SIZE) ring.shift();
+
+          if (!calDone) {
+            await handleMessage({ type: 'rms', value: rms });
+          } else if (currentThreshold !== null && rms >= currentThreshold) {
+            const hf = hfEnergy(chunk);
+            if (hf < s.hfFloor) {
+              await handleMessage({ type: 'gated', rms, hfEnergy: hf });
+            } else if (nowMs - lastSpikeMs >= s.debounceMs) {
+              lastSpikeMs = nowMs;
+              await handleMessage({ type: 'spike', rms, hfEnergy: hf,
+                                    timestamp: nowMs, ringBuffer: [...ring] });
+            }
+          }
+
+          // Yield to UI every 200 chunks (~2s of audio) to keep page responsive
+          if (ci % 200 === 0) {
+            const pct = Math.round(ci / total * 100);
+            if (!calDone) setStatus(`Calibrating… (file)`, 'cal');
+            else          setStatus(`Processing… ${pct}%`, 'cal');
+            await new Promise(r => setTimeout(r, 0));
+          }
+        }
+
+        running = false;
+        document.getElementById('btn-start').disabled = false;
+        document.getElementById('btn-load').disabled  = false;
+        if (calDone) setStatus(`Done — ${file.name}`, 'ready');
+        else         setStatus('File too short to calibrate', 'error');
       }
 
       function addCycleToUI(n, delta_ms, speed, ts, status, tend_rms, tstart_rms, hfEnergy, threshold) {
@@ -680,6 +783,15 @@ for _rms, _t in _ring_js:
         }
       }
 
+      document.getElementById('btn-load').addEventListener('click', () => {
+        document.getElementById('file-input').click();
+      });
+      document.getElementById('file-input').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        e.target.value = ''; // allow re-selecting same file
+        if (file) await processFileAudio(file);
+      });
+
       document.getElementById('btn-start').addEventListener('click', async () => {
         if (running) return;
         running = true; calDone = false;
@@ -710,6 +822,7 @@ for _rms, _t in _ring_js:
       document.getElementById('btn-reset').addEventListener('click', async () => {
         if (audioCtx) { await audioCtx.close(); audioCtx = null; processor = null; }
         running = false; calDone = false;
+        document.getElementById('file-name').textContent = '';
         currentBaseline = null; currentThreshold = null;
         document.getElementById('btn-start').disabled = false;
         await applyReset();
