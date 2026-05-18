@@ -2,3 +2,6 @@
 analysis/.ipynb_checkpoints/
 analysis/iframe_figures/
 **/.ipynb_checkpoints/
+
+# Test data — audio recordings and screenshots
+test_data/
